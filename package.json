@@ -1,0 +1,26 @@
+{
+  "name": "btool",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^6.1.0",
+    "@types/lodash": "^4.14.195",
+    "ant-design-vue": "4.x",
+    "jsplumb": "^2.15.6",
+    "pinia": "^2.1.4",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "vuedraggable": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "unplugin-vue-components": "^0.25.1",
+    "vite": "^4.4.0"
+  }
+}
