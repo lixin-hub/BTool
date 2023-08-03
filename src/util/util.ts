@@ -1,3 +1,4 @@
+import { DocNodeData, Line } from "@/types";
 
 function uuid(len: number, radix: number): string {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
@@ -28,4 +29,65 @@ function uuid(len: number, radix: number): string {
     return uuid.join('');
 }
 
-export function UUID(): string { return uuid(10, 16) }
+export function UUID(radix?: number): string { return uuid(radix || 10, 16) }
+
+export function findDocNodeById(docs: DocNodeData[], id: string): DocNodeData | undefined {
+    for (let child of docs) {
+        if (child.id === id)
+            return child;
+    }
+    return undefined;
+}
+//判断那些节点构成了环
+export function findCycle(lineList: Line[]): string[] {
+    const adjacencyList: { [key: string]: string[] } = {};
+    const visited: { [key: string]: boolean } = {};
+    const cycle: string[] = [];
+
+    // 构建邻接列表
+    for (const line of lineList) {
+        if (!adjacencyList[line.from]) {
+            adjacencyList[line.from] = [];
+        }
+        adjacencyList[line.from].push(line.to);
+    }
+
+    function dfs(node: string, path: string[]): string[] | null {
+        if (visited[node]) {
+            const cycleStart = path.indexOf(node);
+            return path.slice(cycleStart);
+        }
+        visited[node] = true;
+
+        if (adjacencyList[node]) {
+            for (const neighbor of adjacencyList[node]) {
+                const cyclePath = dfs(neighbor, [...path, node]);
+                if (cyclePath) {
+                    return cyclePath;
+                }
+            }
+        }
+
+        visited[node] = false;
+        return null;
+    }
+
+    for (const node in adjacencyList) {
+        const cyclePath = dfs(node, []);
+        if (cyclePath) {
+            cycle.push(...cyclePath);
+        }
+    }
+
+    return cycle;
+}
+//找到node节点
+export function findParentNode(element: HTMLElement, clazz: string): HTMLElement | null {
+    let currentElement: HTMLElement | null = element;
+
+    while (currentElement && !currentElement.classList.contains(clazz)) {
+        currentElement = currentElement.parentElement;
+    }
+
+    return currentElement;
+}

@@ -1,1 +1,0 @@
-export { default as Lside } from './src/Lside.vue'

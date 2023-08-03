@@ -10,13 +10,16 @@
             <a-layout-content>
                 <Documention></Documention>
             </a-layout-content>
+            <a-layout-sider width="250" class="lside">
+                <Rside></Rside>
+            </a-layout-sider>
         </a-layout>
         <a-layout-footer>Footer</a-layout-footer>
     </a-layout>
 </template>
 <script lang="ts" setup>
 import { Documention } from '@/components/Document'
-import { Lside } from '@/components/Lside'
+import { Lside, Rside } from '@/components/ASide'
 import { Header } from '@/components/Header'
 
 </script>

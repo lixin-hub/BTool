@@ -1,6 +1,5 @@
-<script setup>
+<script setup lang="ts">
 </script>
-
 
 <template>
   <div class="root">
@@ -23,4 +22,5 @@
 
 root {
   height: 100vh;
-}</style>
+}
+</style>

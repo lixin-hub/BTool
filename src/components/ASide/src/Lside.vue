@@ -8,7 +8,8 @@
                 <draggable @end="onDragEnd" :list="sub.children" itemKey="label" :sort="false">
                     <template #item="{ element }">
                         <div class="menu-item" :id="element.key">
-                            <Node :nodeData="element"></Node>
+                            <MenuNode :nodeData="element">
+                            </MenuNode>
                         </div>
                     </template>
                 </draggable>
@@ -17,7 +18,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import Node from '@/components/Node.vue';
+import { MenuNode } from '@/components/Node';
 import draggable from 'vuedraggable';
 import { reactive, ref, toRaw } from 'vue';
 import useCommonStore from '@/store/common'
@@ -28,7 +29,7 @@ const items = reactive(commonStore.menuItems)
 let isClose = ref(true);
 function menuClick(i: number) {
     const menus: NodeList = document.querySelectorAll(".menu")
-    const submenu: ChildNode = menus[i].childNodes[1]
+    const submenu = menus[i].childNodes[1]
     if (isClose.value) {
         isClose.value = false
         submenu.className = "sub-menu"
@@ -40,12 +41,10 @@ function menuClick(i: number) {
 
 }
 function onDragEnd(e: any) {
-    // console.log(e.originalEvent.clientX);
-    // console.log(e.originalEvent.clientY);
     let id: String = e.item.id;
-
     const arr = toRaw(items)
     let node = null;
+    //根据id找到节点
     for (let index = 0; index < arr.length; index++) {
         if (node) { break }
         const element = arr[index];

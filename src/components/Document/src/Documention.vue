@@ -6,7 +6,7 @@
     </div>
 </template>
     
-<script setup>
+<script setup lang="ts">
 import TabContent from './TabContent.vue';
 import Content from './Content.vue';
 

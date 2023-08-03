@@ -9,8 +9,8 @@
 </template>
 <script lang="ts" setup>
 import { StarTwoTone } from '@ant-design/icons-vue';
-import { NodeData } from '@/types';
-defineProps<{ nodeData: NodeData }>()
+import { MenuNodeData } from '@/types';
+defineProps<{ nodeData: MenuNodeData }>()
 </script>
 <style scoped>
 .icon {
@@ -30,5 +30,6 @@ defineProps<{ nodeData: NodeData }>()
     background-color: goldenrod;
     border-radius: 5px;
     height: 40px;
+    position: relative;
 }
 </style>

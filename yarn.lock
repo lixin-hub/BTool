@@ -59,6 +59,13 @@
   "resolved" "https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.18.14.tgz"
   "version" "0.18.14"
 
+"@howdyjs/mouse-menu@^2.0.8":
+  "integrity" "sha512-MNT6s2SYFSOhOE9vxbDcnsEfukUCXonLYw+qKuhSMwGDqX1AICQntkqRYFjzcwPs/NYYrTMl0Z5hfR8CtwvBkg=="
+  "resolved" "https://registry.npmmirror.com/@howdyjs/mouse-menu/-/mouse-menu-2.0.8.tgz"
+  "version" "2.0.8"
+  dependencies:
+    "tslib" "^1.9.3"
+
 "@jridgewell/sourcemap-codec@^1.4.15":
   "integrity" "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
   "resolved" "https://registry.npmmirror.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
@@ -563,6 +570,11 @@
     "picocolors" "^1.0.0"
     "source-map-js" "^1.0.2"
 
+"pubsub-js@^1.9.4":
+  "integrity" "sha512-hJYpaDvPH4w8ZX/0Fdf9ma1AwRgU353GfbaVfPjfJQf1KxZ2iHaHl3fAUw1qlJIR5dr4F3RzjGaWohYUEyoh7A=="
+  "resolved" "https://registry.npmmirror.com/pubsub-js/-/pubsub-js-1.9.4.tgz"
+  "version" "1.9.4"
+
 "queue-microtask@^1.2.2":
   "integrity" "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A=="
   "resolved" "https://registry.npmmirror.com/queue-microtask/-/queue-microtask-1.2.3.tgz"
@@ -657,6 +669,11 @@
   dependencies:
     "is-number" "^7.0.0"
 
+"tslib@^1.9.3":
+  "integrity" "sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg=="
+  "resolved" "https://registry.npmmirror.com/tslib/-/tslib-1.14.1.tgz"
+  "version" "1.14.1"
+
 "unplugin-vue-components@^0.25.1":
   "integrity" "sha512-kzS2ZHVMaGU2XEO2keYQcMjNZkanDSGDdY96uQT9EPe+wqSZwwgbFfKVJ5ti0+8rGAcKHColwKUvctBhq2LJ3A=="
   "resolved" "https://registry.npmmirror.com/unplugin-vue-components/-/unplugin-vue-components-0.25.1.tgz"
@@ -713,7 +730,7 @@
   dependencies:
     "is-plain-object" "3.0.1"
 
-"vue@^2.6.14 || ^3.3.0", "vue@^3.0.0", "vue@^3.0.0-0 || ^2.6.0", "vue@^3.0.1", "vue@^3.2.0", "vue@^3.2.25", "vue@^3.3.4", "vue@>=3.0.3", "vue@>=3.2.0", "vue@2 || 3", "vue@3.3.4":
+"vue@^2.6.14 || ^3.3.0", "vue@^3.0.0", "vue@^3.0.0-0 || ^2.6.0", "vue@^3.0.1", "vue@^3.2.0", "vue@^3.2.25", "vue@^3.3.4", "vue@>=3.0.0", "vue@>=3.0.3", "vue@>=3.2.0", "vue@2 || 3", "vue@3.3.4":
   "integrity" "sha512-VTyEYn3yvIeY1Py0WaYGZsXnz3y5UnGi62GjVEqvEGPl6nxbOrCXbVOTQWBEJUqAyTUk2uJ5JLVnYJ6ZzGbrSw=="
   "resolved" "https://registry.npmmirror.com/vue/-/vue-3.3.4.tgz"
   "version" "3.3.4"
