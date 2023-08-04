@@ -1,5 +1,6 @@
-import { DocNodeData, Line } from "@/types";
+import { DocNodeData, Line, MenuNodeData } from "@/types";
 
+import { throttle } from 'lodash';
 function uuid(len: number, radix: number): string {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
     var uuid = [], i;
@@ -35,6 +36,18 @@ export function findDocNodeById(docs: DocNodeData[], id: string): DocNodeData | 
     for (let child of docs) {
         if (child.id === id)
             return child;
+    }
+    return undefined;
+}
+
+export function findMenuNodeByKey(menuItems: MenuNodeData[], key: string): MenuNodeData | undefined {
+    for (let children of menuItems) {
+        if (children.children)
+            for (let child of children.children) {
+                if (child.key === key)
+                    return child;
+            }
+
     }
     return undefined;
 }
@@ -90,4 +103,26 @@ export function findParentNode(element: HTMLElement, clazz: string): HTMLElement
     }
 
     return currentElement;
+}
+
+
+//随时获取鼠标位置
+
+export function createMousePositionTracker(throttleTime: number) {
+    let mouseX = 0;
+    let mouseY = 0;
+
+    const updateMousePosition = throttle((event) => {
+        mouseX = event.clientX; // 获取鼠标相对于浏览器窗口的水平坐标
+        mouseY = event.clientY; // 获取鼠标相对于浏览器窗口的垂直坐标
+    }, throttleTime);
+
+    document.addEventListener('mousemove', updateMousePosition);
+
+    return {
+        getMousePosition: () => ({ x: mouseX, y: mouseY }),
+        destroy: () => {
+            document.removeEventListener('mousemove', updateMousePosition);
+        }
+    };
 }

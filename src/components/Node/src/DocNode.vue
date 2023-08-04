@@ -1,6 +1,6 @@
 <template>
     <div class="node" ref="node" :style="myStyle" @mouseup="changePostion">
-        <label class="icon flow-node-drag">
+        <label @pointerover.="" class="icon flow-node-drag">
         </label>
         <label class="label">{{ nodeData.label }}</label>
     </div>
@@ -17,7 +17,7 @@ const myStyle = computed(() => ({
 }));
 let ins = getCurrentInstance()
 
-function changePostion(e: MouseEvent) {
+function changePostion(_e: MouseEvent) {
     if (!node) return;
     const nodeVal = node.value;
     if (!nodeVal) return
@@ -60,5 +60,11 @@ function changePostion(e: MouseEvent) {
     border-radius: 5px;
     height: 40px;
     position: absolute;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.node:hover {
+    box-shadow: 0 0 5px 5px rgb(35, 124, 139);
+    opacity: 1;
 }
 </style>

@@ -1,8 +1,8 @@
 <template>
     <div ref="root" class="container" id="efContainer">
         <template v-for="node in nodeList" :key="node.key">
-            <DocNode @click.right.prevent="showMenu" @changePostion="changePostion" :node-data="node" :id="node.id"
-                @click="onNodeClick(node)">
+            <DocNode @dblclick="doubleClick" @click.right.prevent="showMenu" @changePostion="changePostion"
+                :node-data="node" :id="node.id" @click="onNodeClick(node)" @mouseenter="onNodeClick(node)">
             </DocNode>
         </template>
     </div>
@@ -10,11 +10,11 @@
 <script setup lang="ts">
 import pubsub from 'pubsub-js'
 import { CustomMouseMenu } from '@howdyjs/mouse-menu';
-import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from "vue";
+import { Ref, nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from "vue";
 import jsPlumbSetting from "@/util/jsPlumbSetting";
 import useCommonStore from '@/store/common'
-import { DocNodeData, MenuNodeData, Line, StreamType, Topics } from "@/types";
-import { UUID, findDocNodeById, findCycle, findParentNode } from "@/util/util";
+import { DocNodeData, Line, StreamType, Topics, ShortCut } from "@/types";
+import { UUID, findDocNodeById, findMenuNodeByKey, createMousePositionTracker, findCycle, findParentNode } from "@/util/util";
 import { DocNode } from "@/components/Node";
 import { Connection, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
 import { message } from 'ant-design-vue';
@@ -27,7 +27,9 @@ let localLineStr = localStorage.getItem("lineList")
 let localNodes, localLines;
 if (localNodesStr) {
     localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
-
+    localNodes.forEach((node) => {
+        node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
+    })
 }
 if (localLineStr) {
     localLines = JSON.parse(localLineStr) as Array<Line>
@@ -36,19 +38,24 @@ if (localLineStr) {
 }
 const nodeList: Array<DocNodeData> = reactive(localNodes || [])
 const lineList: Array<Line> = reactive(commonStore.lineList || [])
-const root = ref(null)
+const root: Ref<HTMLDivElement | null> = ref(null)
+
 let instance: jsPlumbInstance = jsPlumb.getInstance()
 let scrollLeft = 0;
 let scrollTop = 0;
 let efContainer: HTMLDivElement | null;
 let containerRect: DOMRect
 let loadFinish = false
+let mouseTracker: { getMousePosition: any; destroy: () => void; };
 onMounted(() => {
+    efContainer = root.value
+    mouseTracker = createMousePositionTracker(500)
     nextTick(() => {
         init();
     })
 })
 const { activeNode } = storeToRefs(commonStore)
+let psateData: DocNodeData | null
 
 function init() {
     instance.ready(() => {
@@ -56,13 +63,12 @@ function init() {
         // instance.setContainer('.container')
         instance.importDefaults(jsPlumbSetting.defaultettings)
         // 初始化节点
-        loadInitNodeData()
+        loadInitNodeData(nodeList, lineList)
         // 会使整个jsPlumb立即重绘。
         instance.setSuspendDrawing(false, true);
         // 单点击了连接线
         instance.bind('click', () => {
             console.log("点击了连线");
-
         })
         // 连线右键点击事件
         instance.bind("contextmenu", function (conn: OnConnectionBindInfo, originalEvent) {
@@ -101,7 +107,7 @@ function init() {
             let tscope = instance.getTargetScope(to)
 
             if (target.inputType == StreamType.NONE) {
-                message.error("目标节点不能连接输入")
+                message.error("输入结点只能输出")
                 return false
             }
             if (source.outputType != target?.inputType) {
@@ -147,32 +153,7 @@ function init() {
         })
     })
 }
-commonStore.addNode = (evt: any, node: MenuNodeData) => {
-    let screenX = evt.originalEvent.clientX, screenY = evt.originalEvent.clientY
-    efContainer = root.value
-    if (efContainer == null) { return }
-    efContainer = (efContainer as HTMLDivElement)
-    containerRect = efContainer.getBoundingClientRect()
-    let left = screenX, top = screenY
-    // 计算是否拖入到容器中
-    if (left < containerRect.x || left > containerRect.width + containerRect.x || top < containerRect.y || containerRect.y > containerRect.y + containerRect.height) {
-        message.warn("请把节点拖入到画布中")
-        return
-    }
-
-    scrollLeft = efContainer.scrollLeft
-    scrollTop = efContainer.scrollTop
-    left = left - containerRect.x + scrollLeft
-    top = top - containerRect.y + scrollTop
-    // 居中
-    let x = left - 100 + 'px'
-    let y = top - 20 + 'px'
-
-    const docNode: DocNodeData = {
-        id: UUID(),
-        ...node,
-        x, y,
-    }
+function addNode(docNode: DocNodeData) {
     nodeList.push(docNode)
     // instance.repaintEverything()
     nextTick(function () {
@@ -193,11 +174,16 @@ commonStore.addNode = (evt: any, node: MenuNodeData) => {
 }
 //删除节点
 function deleteNode(id: string) {
-    deleteAllLine(id)
     let index = nodeList.findIndex(function (node) {
         return node.id === id
     })
+    if (index < 0) {
+        message.error("请选中结点")
+        return
+    }
+    deleteAllLine(id)
     nodeList.splice(index, 1)
+    // activeNode.value = nodeList[0]
     nextTick(function () {
         instance.removeAllEndpoints(id);
     })
@@ -283,8 +269,18 @@ const showMenu = (event: MouseEvent) => {
     const { x, y } = event;
     MouseMenuCtx.show(x, y);
 }
+function doubleClick(event: MouseEvent) {
+    if (!event) return
+    let node = findParentNode(event.target as HTMLElement, "node")
+    if (!node) return
+    let nodeData = findDocNodeById(nodeList, node.id)
+    console.log(toRaw(nodeData));
+
+    toRaw(nodeData)?.doubleClick?.call(nodeData, event)
+
+}
 // 加载流程图
-function loadInitNodeData() {
+function loadInitNodeData(nodeList: Array<DocNodeData>, lineList: Array<Line>) {
     // 初始化节点
     for (let i = 0; i < nodeList.length; i++) {
         let node = nodeList[i]
@@ -321,25 +317,117 @@ function changePostion(data: { id: string; x: string | undefined; y: string | un
     node.y = data.y || node.y
     activeNode.value = { ...node }
 }
-
+//监听结点变化
 watch(nodeList, (newData) => {
     localStorage.setItem("nodeList", JSON.stringify(toRaw(newData)))
 
 })
-
+//监听链接变化
 watch(lineList, (newData) => {
     commonStore.lineList = newData
     localStorage.setItem("lineList", JSON.stringify(toRaw(newData)))
 })
+//清除画板
 let unsubscribeClearAllNodes = pubsub.subscribe(Topics.CLEAR_ALL_NODES, () => {
     nodeList.splice(0, nodeList.length)
     lineList.splice(0, lineList.length)
     instance.deleteEveryConnection()
     // init()
-
 })
+//删除结点
+let unsubscribeDelete = pubsub.subscribe(ShortCut.KEY_DELETE, () => {
+    deleteNode(activeNode.value.id)
+})
+//添加结点
+let unsubscribeAddNode = pubsub.subscribe(Topics.NODE_ADD, (_: any, data: { evt: any; node: any; }) => {
+    let { evt, node } = data
+    let screenX = evt.originalEvent.clientX, screenY = evt.originalEvent.clientY
+    efContainer = root.value
+    if (efContainer == null) { return }
+    efContainer = (efContainer as HTMLDivElement)
+    containerRect = efContainer.getBoundingClientRect()
+    let left = screenX, top = screenY
+    // 计算是否拖入到容器中
+    if (left < containerRect.x || left > containerRect.width + containerRect.x || top < containerRect.y || containerRect.y > containerRect.y + containerRect.height) {
+        message.warn("请把节点拖入到画布中")
+        return
+    }
+
+    scrollLeft = efContainer.scrollLeft
+    scrollTop = efContainer.scrollTop
+    left = left - containerRect.x + scrollLeft
+    top = top - containerRect.y + scrollTop
+    // 居中
+    let x = left - 100 + 'px'
+    let y = top - 20 + 'px'
+
+    const docNode: DocNodeData = {
+        id: UUID(),
+        ...node,
+        x, y,
+    }
+    addNode(docNode)
+})
+//复制粘贴
+let unsubscribeCtrlD = pubsub.subscribe(ShortCut.KEY_CTRL_D, () => {
+    let clone = lodash.cloneDeep(toRaw(activeNode.value))
+    let docNode = { ...clone, y: Number.parseInt(clone.y) + 60 + 'px', id: UUID() }
+    addNode(docNode)
+})
+
+//复制
+let unsubscribeCtrlC = pubsub.subscribe(ShortCut.KEY_CTRL_C, async () => {
+    if (!activeNode.value) {
+        message.warn("请选中要复制的结点")
+        return
+    }
+    psateData = lodash.cloneDeep(activeNode.value)
+    try {
+        await navigator.clipboard.writeText(JSON.stringify(activeNode.value))
+    } catch { }
+    message.success("复制成功")
+})
+
+//粘贴
+let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
+
+    let node: DocNodeData | null = null
+    try {
+        let text = await navigator.clipboard.readText()
+        if (!text) return
+        node = JSON.parse(text)
+        if (!node) return
+        node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
+    } catch {
+
+    }
+    let temp = node || psateData
+    if (!temp)
+        return
+    const currentPosition = mouseTracker.getMousePosition();
+    if (!efContainer) return
+    containerRect = efContainer.getBoundingClientRect()
+    let left = currentPosition.x, top = currentPosition.y
+    let scrollLeft = efContainer?.scrollLeft || 0
+    let scrollTop = efContainer?.scrollTop || 0
+    left = left - containerRect.x + scrollLeft
+    top = top - containerRect.y + scrollTop
+    let docNode = {
+        ...temp, x: left + 'px',
+        y: top + 'px', id: UUID()
+    }
+    addNode(docNode)
+    message.success("粘贴成功")
+})
+
 onUnmounted(function () {
     pubsub.unsubscribe(unsubscribeClearAllNodes)
+    pubsub.unsubscribe(unsubscribeCtrlD)
+    pubsub.unsubscribe(unsubscribeCtrlC)
+    pubsub.unsubscribe(unsubscribeCtrlV)
+    pubsub.unsubscribe(unsubscribeDelete)
+    pubsub.unsubscribe(unsubscribeAddNode)
+    mouseTracker.destroy()
 })
 </script>
 <style scoped lang="scss">
@@ -349,5 +437,9 @@ onUnmounted(function () {
     // background-color: antiquewhite;
     position: relative;
 
+}
+
+#copy {
+    // opacity: 0;
 }
 </style>

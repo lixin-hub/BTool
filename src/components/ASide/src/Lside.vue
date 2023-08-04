@@ -20,16 +20,18 @@
 <script lang="ts" setup>
 import { MenuNode } from '@/components/Node';
 import draggable from 'vuedraggable';
+import { cloneDeep } from 'lodash';
 import { reactive, ref, toRaw } from 'vue';
 import useCommonStore from '@/store/common'
-
+import pubsub from 'pubsub-js'
+import { Topics } from '@/types';
 const commonStore = useCommonStore()
 const items = reactive(commonStore.menuItems)
 
 let isClose = ref(true);
 function menuClick(i: number) {
     const menus: NodeList = document.querySelectorAll(".menu")
-    const submenu = menus[i].childNodes[1]
+    const submenu = menus[i].childNodes[1] as HTMLElement
     if (isClose.value) {
         isClose.value = false
         submenu.className = "sub-menu"
@@ -59,7 +61,9 @@ function onDragEnd(e: any) {
         }
 
     }
-    commonStore.addNode(e, JSON.parse(JSON.stringify(node)));
+    if (!node) return
+    pubsub.publish(Topics.NODE_ADD, { evt: e, node: cloneDeep(node) })
+    commonStore.addNode(e, cloneDeep(node));
     node = null
 }
 // onMounted(() => {

@@ -26,7 +26,7 @@
 import { reactive, ref, watch, toRaw } from 'vue';
 import type { Ref, UnwrapRef } from 'vue';
 import { CheckOutlined, EditOutlined } from '@ant-design/icons-vue';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep } from 'lodash';
 import useCommonStore from '@/store/common'
 import { storeToRefs } from 'pinia';
 import { DocNodeData } from '@/types';
@@ -56,8 +56,14 @@ watch(activeNode, function (newData) {
     const temp = toRaw<DocNodeData>(newData)
     for (const key in temp) {
         if (Object.prototype.hasOwnProperty.call(temp, key)) {
-            const value = temp[key]
-            dataSource.value.push({ key, value })
+            const value = temp[key as keyof DocNodeData]; // 使用索引类型查询语法
+            const objString = JSON.stringify(value, (_key, value) => {
+                if (typeof value === "function") {
+                    return value.toString(); // 将函数转换为字符串
+                }
+                return value; // 其他情况保持不变
+            });
+            dataSource.value.push({ key, value: objString })
         }
     }
 })

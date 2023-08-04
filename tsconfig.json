@@ -22,17 +22,20 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    "allowJs": true,
     "paths": {
       "@/*": [
         "src/*"
       ],
-    }
+    },
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.vue"
+    "src/**/*.vue",
+    "pubsub.d.ts"
   ],
   "references": [
     {

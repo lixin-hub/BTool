@@ -1,4 +1,4 @@
-import { Connection, EndpointOptions } from "jsplumb"
+import { EndpointOptions } from "jsplumb"
 
 export enum StreamType {
     NONE = 0,//无
@@ -37,6 +37,7 @@ export interface MenuNodeData {
     maxOutputNum?: number,
     inputType?: StreamType,//输入
     outputType?: StreamType,//输出类型
+    doubleClick?: (e: MouseEvent) => void,
 }
 /** 
  *文档内部使用的节点数据结构
@@ -45,7 +46,7 @@ export interface DocNodeData extends MenuNodeData {
     id: string,//节点唔一id,//组件唯一id
     x: string,//坐标
     y: string,
-    style?: object//自定义样式
+    style?: object,//自定义样式
 }
 
 //pubsub
@@ -55,4 +56,11 @@ export enum Topics {
     NODE_UPDATE = "node_update",
     NODE_SELECT = "node_select",
     CLEAR_ALL_NODES = "clear_all_nodes"
+}
+//快捷键
+export enum ShortCut {
+    KEY_CTRL_D = "ctrl+d",
+    KEY_DELETE = "delete",
+    KEY_CTRL_C = "ctrl+c",
+    KEY_CTRL_V = "ctrl+v",
 }

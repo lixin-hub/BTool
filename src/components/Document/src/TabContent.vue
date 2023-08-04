@@ -1,7 +1,9 @@
 <template>
     <div class="top-tool-bar">
         <a-tooltip title="清空画布">
-            <a-button @click="clearAllNodes" :icon="h(DeleteOutlined)">清空画布</a-button> </a-tooltip>
+            <a-button @click="clearAllNodes" :icon="h(DeleteOutlined)">清空画布</a-button>
+        </a-tooltip>
+
     </div>
     <div class="content">
         <Background>
@@ -15,9 +17,7 @@ import Background from './Background.vue';
 import { h } from 'vue';
 import pubsub from 'pubsub-js'
 import { DeleteOutlined } from '@ant-design/icons-vue';
-import useCommonStore from '@/store/common';
 import { Topics } from '@/types';
-const store = useCommonStore()
 function clearAllNodes() {
     pubsub.publish(Topics.CLEAR_ALL_NODES)
 }

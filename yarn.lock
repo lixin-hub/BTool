@@ -119,6 +119,11 @@
   "resolved" "https://registry.npmmirror.com/@types/lodash/-/lodash-4.14.195.tgz"
   "version" "4.14.195"
 
+"@types/pubsub-js@^1.8.3":
+  "integrity" "sha512-6BqY04dh2UV1dNV690tyJVJYQ0U6qBH4tU+FCwY1Mhl8jOPOP9qiIvgLnB59cVik/E6/R002oXZpGiDm+2C8eA=="
+  "resolved" "https://registry.npmmirror.com/@types/pubsub-js/-/pubsub-js-1.8.3.tgz"
+  "version" "1.8.3"
+
 "@vitejs/plugin-vue@^4.2.3":
   "integrity" "sha512-R6JDUfiZbJA9cMiguQ7jxALsgiprjBeHL5ikpXfJCH62pPHtI+JdJ5xWj6Ev73yXSlYl86+blXn1kZHQ7uElxw=="
   "resolved" "https://registry.npmmirror.com/@vitejs/plugin-vue/-/plugin-vue-4.2.3.tgz"
@@ -574,6 +579,11 @@
   "integrity" "sha512-hJYpaDvPH4w8ZX/0Fdf9ma1AwRgU353GfbaVfPjfJQf1KxZ2iHaHl3fAUw1qlJIR5dr4F3RzjGaWohYUEyoh7A=="
   "resolved" "https://registry.npmmirror.com/pubsub-js/-/pubsub-js-1.9.4.tgz"
   "version" "1.9.4"
+
+"pubsub-ts@^0.2.0":
+  "integrity" "sha512-lbPRk72Cv9x+ZZpTSIK5a+4Ix89V/3mWuuvfmft757ElfRn+HdN1pCb6G6Z1P+1ehMFp2sIiZTbJdZ1ZRBLpPQ=="
+  "resolved" "https://registry.npmmirror.com/pubsub-ts/-/pubsub-ts-0.2.0.tgz"
+  "version" "0.2.0"
 
 "queue-microtask@^1.2.2":
   "integrity" "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A=="

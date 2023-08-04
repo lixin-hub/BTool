@@ -17,13 +17,17 @@ let endPointOptions: Array<EndpointOptions> = [
     }
 ]
 
-const children_1 = [{
+const children_1: Array<MenuNodeData> = [{
     key: "1-1",
     icon: '',
     label: "音频文件输入",
     endPointOptions,
     inputType: StreamType.NONE,
-    outputType: StreamType.AUDIO
+    outputType: StreamType.AUDIO,
+    doubleClick(e) {
+        console.log("111");
+
+    },
 }, {
     key: "1-2",
     icon: '',
@@ -47,7 +51,7 @@ const children_1 = [{
     inputType: StreamType.NONE,
     outputType: StreamType.AUDIO
 }]
-const children_2 = [
+const children_2: Array<MenuNodeData> = [
     {
         key: "2-1",
         icon: '',
@@ -73,7 +77,7 @@ const children_2 = [
         inputNum: 2
     },
 ]
-const children_3 = [
+const children_3: Array<MenuNodeData> = [
 
     {
         type: NodeType.TYPE_AUDIO_TRANS,
@@ -156,7 +160,7 @@ const children_3 = [
         outputType: StreamType.AUDIO
     },
 ]
-const children_4 = [{
+const children_4: Array<MenuNodeData> = [{
     key: "4-1",
     icon: '',
     label: "语音降噪",
@@ -200,7 +204,7 @@ const children_4 = [{
     outputType: StreamType.AUDIO
 },
 ]
-const children_5 = [
+const children_5: Array<MenuNodeData> = [
     {
         key: "5-1",
         icon: '',
