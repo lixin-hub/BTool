@@ -402,6 +402,13 @@
   dependencies:
     "reusify" "^1.0.4"
 
+"file-selector@^0.6.0":
+  "integrity" "sha512-QlZ5yJC0VxHxQQsQhXvBaC7VRJ2uaxTf+Tfpu4Z/OcVQJVpZO+DGU0rkoVW5ce2SccxugvpBJoMvUs59iILYdw=="
+  "resolved" "https://registry.npmmirror.com/file-selector/-/file-selector-0.6.0.tgz"
+  "version" "0.6.0"
+  dependencies:
+    "tslib" "^2.4.0"
+
 "fill-range@^7.0.1":
   "integrity" "sha512-qOo9F+dMUmC2Lcb4BbVvnKJxTPjCm+RRpe4gDuGrzkL7mEVl/djYSu2OdQ2Pa302N4oqkSg9ir6jaLWJ2USVpQ=="
   "resolved" "https://registry.npmmirror.com/fill-range/-/fill-range-7.0.1.tgz"
@@ -684,6 +691,11 @@
   "resolved" "https://registry.npmmirror.com/tslib/-/tslib-1.14.1.tgz"
   "version" "1.14.1"
 
+"tslib@^2.4.0":
+  "integrity" "sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig=="
+  "resolved" "https://registry.npmmirror.com/tslib/-/tslib-2.6.1.tgz"
+  "version" "2.6.1"
+
 "unplugin-vue-components@^0.25.1":
   "integrity" "sha512-kzS2ZHVMaGU2XEO2keYQcMjNZkanDSGDdY96uQT9EPe+wqSZwwgbFfKVJ5ti0+8rGAcKHColwKUvctBhq2LJ3A=="
   "resolved" "https://registry.npmmirror.com/unplugin-vue-components/-/unplugin-vue-components-0.25.1.tgz"
@@ -764,6 +776,11 @@
   "version" "4.0.3"
   dependencies:
     "loose-envify" "^1.0.0"
+
+"wavesurfer.js@^7.1.1":
+  "integrity" "sha512-nChYa5M4tOGkTP4EtzyHXY3pk/T7bI2ttv6A5wFPS/3+jjQ8I85esqqPn52+ZJyE72r2hpgk863xekgRswAcaw=="
+  "resolved" "https://registry.npmmirror.com/wavesurfer.js/-/wavesurfer.js-7.1.1.tgz"
+  "version" "7.1.1"
 
 "webpack-sources@^3.2.3":
   "integrity" "sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w=="

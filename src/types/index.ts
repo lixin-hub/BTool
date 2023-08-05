@@ -1,13 +1,16 @@
+import { MenuSetting } from "@howdyjs/mouse-menu/dist/types"
 import { EndpointOptions } from "jsplumb"
 
+
 export enum StreamType {
-    NONE = 0,//无
-    AUDIO = 1,//音频文件
-    VIDEO = 2,//视频文件
-    TXT = 3,//文本文件
-    MONITOR = 4,//监视器预览
-    SPEAKER = 6,//扬声器
-    WAVE = 7,//示波器
+    NONE = "NONE",
+    AUDIO = "AUDIO",
+    VIDEO = "VIDEO",
+    TXT = "TEX",
+    MONITOR = "MONITOR",
+    SPEAKER = "SPEAKER",
+    WAVE = "WAVE",
+    FILE = "FILE"
 }
 export enum NodeType {
     TYPE_INPUT = 1,
@@ -20,6 +23,13 @@ export interface Line {
     from: string,
     to: string,
 }
+// export interface ContextMenuItem{
+//     label: string,
+//     tips: string,
+//     fn: () => void
+
+// }
+
 /**
  * 菜单栏节点
  */
@@ -38,6 +48,8 @@ export interface MenuNodeData {
     inputType?: StreamType,//输入
     outputType?: StreamType,//输出类型
     doubleClick?: (e: MouseEvent) => void,
+    contextMenuItems?: MenuSetting[]//上下文菜单项,
+    playload?: any//结点保存的数据
 }
 /** 
  *文档内部使用的节点数据结构
@@ -55,7 +67,10 @@ export enum Topics {
     NODE_DELETE = "node_delete",
     NODE_UPDATE = "node_update",
     NODE_SELECT = "node_select",
-    CLEAR_ALL_NODES = "clear_all_nodes"
+    CLEAR_ALL_NODES = "clear_all_nodes",
+    EXEC_FLOW = "exec_flow",
+    HIGHT_LIGHT_NODES = "hight_light_nodes",
+
 }
 //快捷键
 export enum ShortCut {

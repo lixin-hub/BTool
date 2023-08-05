@@ -51,14 +51,15 @@ function changePostion(_e: MouseEvent) {
 
 .node {
     display: flex;
+    font-size: small;
     justify-content: space-around;
     align-items: center;
-    width: 200px;
+    width: 150px;
     color: white;
-    line-height: 40px;
+    line-height: 30px;
     background-color: goldenrod;
     border-radius: 5px;
-    height: 40px;
+    height: 30px;
     position: absolute;
     transition: opacity 0.3s ease-in-out;
 }

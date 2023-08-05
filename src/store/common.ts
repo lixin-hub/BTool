@@ -1,7 +1,9 @@
 import { DocNodeData, Line, MenuNodeData, NodeType, StreamType } from '@/types';
 import { EndpointOptions } from 'jsplumb';
+import { cloneDeep, lte } from 'lodash';
 import { defineStore } from 'pinia'
-import { PubSub } from 'pubsub-ts';
+import { openFileManager } from '@/util/util';
+import useCommonStore from '@/store/common';
 let endPointOptions: Array<EndpointOptions> = [
     // {
     //     maxConnections: 1,
@@ -17,28 +19,61 @@ let endPointOptions: Array<EndpointOptions> = [
     }
 ]
 
+const defaultContextMenu = [
+    {
+        label: '复制',
+        tips: 'Open',
+        fn: () => {
+        }
+    },
+    {
+        label: '查看',
+        tips: 'Edit',
+        fn: () => {
+        }
+    },
+    {
+        label: '删除',
+        tips: 'Delete',
+        fn: () => {
+        }
+    },
+    {
+        label: '重命名',
+        tips: 'Rename',
+        fn: () => {
+        }
+    }
+]
 const children_1: Array<MenuNodeData> = [{
     key: "1-1",
     icon: '',
     label: "音频文件输入",
+    inputNum: 0,
     endPointOptions,
     inputType: StreamType.NONE,
     outputType: StreamType.AUDIO,
-    doubleClick(e) {
-        console.log("111");
+    async doubleClick(e) {
+        const store = useCommonStore()
 
+        let file = await openFileManager(".mp3")
+        console.log(file);
+        this.playload = file
+        store.wavedata.file = file
     },
 }, {
     key: "1-2",
     icon: '',
-    label: "视频文件输入",
+    label: "从视频输入",
+    inputNum: 0,
     endPointOptions,
     inputType: StreamType.NONE,
-    outputType: StreamType.VIDEO
+    outputType: StreamType.AUDIO
 }, {
     key: "1-3",
     icon: '',
     label: "网络音频输入",
+    inputNum: 0,
     endPointOptions,
     inputType: StreamType.NONE,
     outputType: StreamType.AUDIO
@@ -47,6 +82,7 @@ const children_1: Array<MenuNodeData> = [{
     key: "1-4",
     icon: '',
     label: "文本输入",
+    inputNum: 0,
     endPointOptions,
     inputType: StreamType.NONE,
     outputType: StreamType.AUDIO
@@ -75,6 +111,20 @@ const children_2: Array<MenuNodeData> = [
         inputType: StreamType.AUDIO,
         outputType: StreamType.AUDIO,
         inputNum: 2
+    }, {
+        key: "2-3",
+        icon: '',
+        label: "淡入",
+        inputType: StreamType.AUDIO,
+        outputType: StreamType.AUDIO,
+        inputNum: 1
+    }, {
+        key: "2-4",
+        icon: '',
+        label: "淡出",
+        inputType: StreamType.AUDIO,
+        outputType: StreamType.AUDIO,
+        inputNum: 1
     },
 ]
 const children_3: Array<MenuNodeData> = [
@@ -209,13 +259,15 @@ const children_5: Array<MenuNodeData> = [
         key: "5-1",
         icon: '',
         label: "输出到文件",
+        outputNum: 0,
         endPointOptions,
         inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        outputType: StreamType.FILE
     }, {
         key: "5-2",
         icon: '',
         label: "输出到扬声器",
+        outputNum: 0,
         endPointOptions,
         inputType: StreamType.AUDIO,
         outputType: StreamType.SPEAKER
@@ -223,6 +275,7 @@ const children_5: Array<MenuNodeData> = [
         key: "5-3",
         icon: '',
         label: "输出到文本文件",
+        outputNum: 0,
         endPointOptions,
         inputType: StreamType.AUDIO,
         outputType: StreamType.TXT
@@ -232,6 +285,7 @@ const children_5: Array<MenuNodeData> = [
         icon: '',
         label: "输出到显示器",
         endPointOptions,
+        outputNum: 0,
         inputType: StreamType.AUDIO,
         outputType: StreamType.MONITOR
     },
@@ -241,17 +295,23 @@ let childrens = [children_1, children_2, children_3, children_4, children_5]
 childrens.forEach((children) => {
     children.forEach((c) => {
         let child = c as MenuNodeData
-        if (!child.inputNum) {
+        if (child.inputNum === undefined) {
             child.inputNum = 1;
         }
-        if (!child.maxInputNum) {
+        if (child.maxInputNum === undefined) {
             child.maxInputNum = child.inputNum;
         }
-        if (!child.outputNum) {
+        if (child.outputNum === undefined) {
             child.outputNum = 1;
         }
-        if (!child.maxOutputNum) {
+        if (child.maxOutputNum === undefined) {
             child.maxOutputNum = child.inputNum;
+        }
+        if (child.contextMenuItems) {
+            child.contextMenuItems = [...child.contextMenuItems, ...cloneDeep(defaultContextMenu)]
+        } else {
+            child.contextMenuItems = cloneDeep(defaultContextMenu)
+
         }
     })
 })
@@ -299,11 +359,13 @@ export default defineStore('common', {
             menuItems,
             //连接线
             lineList: Array<Line>(),
+            nodeList: Array<DocNodeData>(),
             activeNode: {} as DocNodeData,
             activeLine: {} as Line,
-            //添加节点事件
-            addNode: (e: any, node: MenuNodeData) => {
-            },
+            wavedata: {//示波器数据
+                file: {} as File
+            }
         }
     },
+
 });

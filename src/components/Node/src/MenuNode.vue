@@ -24,12 +24,13 @@ defineProps<{ nodeData: MenuNodeData }>()
 }
 
 .node {
-    width: 200px;
+    width: 150px;
+    font-size: small;
     color: white;
-    line-height: 40px;
+    line-height: 30px;
     background-color: goldenrod;
     border-radius: 5px;
-    height: 40px;
+    height: 30px;
     position: relative;
 }
 </style>

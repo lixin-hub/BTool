@@ -30,13 +30,14 @@ if (localNodesStr) {
     localNodes.forEach((node) => {
         node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
     })
+    commonStore.nodeList = localNodes
 }
 if (localLineStr) {
     localLines = JSON.parse(localLineStr) as Array<Line>
     commonStore.lineList = localLines
 
 }
-const nodeList: Array<DocNodeData> = reactive(localNodes || [])
+const nodeList: Array<DocNodeData> = reactive(commonStore.nodeList || [])
 const lineList: Array<Line> = reactive(commonStore.lineList || [])
 const root: Ref<HTMLDivElement | null> = ref(null)
 
@@ -106,12 +107,17 @@ function init() {
             }
             let tscope = instance.getTargetScope(to)
 
-            if (target.inputType == StreamType.NONE) {
+            if (target.inputType == StreamType.NONE || target.inputNum == 0) {
                 message.error("输入结点只能输出")
                 return false
             }
+
             if (source.outputType != target?.inputType) {
                 message.error('源节点的输出类型和目标节点的输入类型不匹配')
+                return false
+            }
+            if (source.outputNum == 0) {
+                message.error("输出结点不能连接其它节点")
                 return false
             }
             // if(target?.inputNum,)
@@ -142,8 +148,10 @@ function init() {
                 clone.push({ from, to })
                 let cycle = findCycle(clone)
                 if (cycle.length > 0) {
+                    cycle.forEach((id) => {
+                        hightLihtNode(id, 2000)
+                    })
                     message.error('节点间不能形成环')
-                    console.log("cycle", cycle);
                     return false
                 }
                 lineList.push({ from, to })
@@ -153,6 +161,7 @@ function init() {
         })
     })
 }
+//添加结点
 function addNode(docNode: DocNodeData) {
     nodeList.push(docNode)
     // instance.repaintEverything()
@@ -269,13 +278,12 @@ const showMenu = (event: MouseEvent) => {
     const { x, y } = event;
     MouseMenuCtx.show(x, y);
 }
+//双击结点（默认行为）
 function doubleClick(event: MouseEvent) {
     if (!event) return
     let node = findParentNode(event.target as HTMLElement, "node")
     if (!node) return
     let nodeData = findDocNodeById(nodeList, node.id)
-    console.log(toRaw(nodeData));
-
     toRaw(nodeData)?.doubleClick?.call(nodeData, event)
 
 }
@@ -309,18 +317,46 @@ function loadInitNodeData(nodeList: Array<DocNodeData>, lineList: Array<Line>) {
         loadFinish = true
     })
 }
+//改变结点位置
 function changePostion(data: { id: string; x: string | undefined; y: string | undefined; }) {
     let node = nodeList.find((node) => { return node.id === data.id })
-
     if (!node) return
     node.x = data.x || node.x;
     node.y = data.y || node.y
     activeNode.value = { ...node }
 }
+//高亮指定节点
+function hightLihtNode(ids: string | DocNodeData[], ms?: number, type?: string) {
+    nextTick(() => {
+        if (ids instanceof Array) {
+            ids.forEach((id) => {
+                let el: HTMLElement | null = document.getElementById(id.id)
+                if (!el) return
+                el.classList.add(type || 'error');
+                setTimeout(() => {
+                    el?.classList.remove(type || 'error');
+                }, ms || 4000)
+            })
+            return
+        }
+        let el: HTMLElement | null = document.getElementById(ids)
+        if (!el) return
+        el.classList.add(type || 'error');
+        setTimeout(() => {
+            deHightLihtNode(ids, type)
+        }, ms || 4000)
+    })
+}
+//取消高亮指定节点
+function deHightLihtNode(id: string, type?: string) {
+    let el: HTMLElement | null = document.getElementById(id)
+    if (!el) return
+    el.classList.remove(type || 'error');
+}
 //监听结点变化
 watch(nodeList, (newData) => {
+    commonStore.nodeList = newData
     localStorage.setItem("nodeList", JSON.stringify(toRaw(newData)))
-
 })
 //监听链接变化
 watch(lineList, (newData) => {
@@ -352,7 +388,6 @@ let unsubscribeAddNode = pubsub.subscribe(Topics.NODE_ADD, (_: any, data: { evt:
         message.warn("请把节点拖入到画布中")
         return
     }
-
     scrollLeft = efContainer.scrollLeft
     scrollTop = efContainer.scrollTop
     left = left - containerRect.x + scrollLeft
@@ -373,6 +408,7 @@ let unsubscribeCtrlD = pubsub.subscribe(ShortCut.KEY_CTRL_D, () => {
     let clone = lodash.cloneDeep(toRaw(activeNode.value))
     let docNode = { ...clone, y: Number.parseInt(clone.y) + 60 + 'px', id: UUID() }
     addNode(docNode)
+    hightLihtNode(docNode.id, 1000, 'info')
 })
 
 //复制
@@ -385,6 +421,7 @@ let unsubscribeCtrlC = pubsub.subscribe(ShortCut.KEY_CTRL_C, async () => {
     try {
         await navigator.clipboard.writeText(JSON.stringify(activeNode.value))
     } catch { }
+    hightLihtNode(activeNode.value.id, 1000, 'info')
     message.success("复制成功")
 })
 
@@ -417,7 +454,12 @@ let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
         y: top + 'px', id: UUID()
     }
     addNode(docNode)
+    hightLihtNode(docNode.id, 1000, 'info')
     message.success("粘贴成功")
+})
+//高亮
+let unsubscribeHeight = pubsub.subscribe(Topics.HIGHT_LIGHT_NODES, (_, { ids, ms }) => {
+    hightLihtNode(ids, ms)
 })
 
 onUnmounted(function () {
@@ -427,10 +469,21 @@ onUnmounted(function () {
     pubsub.unsubscribe(unsubscribeCtrlV)
     pubsub.unsubscribe(unsubscribeDelete)
     pubsub.unsubscribe(unsubscribeAddNode)
+    pubsub.unsubscribe(unsubscribeHeight)
     mouseTracker.destroy()
 })
 </script>
 <style scoped lang="scss">
+.error {
+    background-color: rgb(255, 48, 93);
+    color: black;
+}
+
+.info {
+    background-color: rgb(48, 131, 255);
+    color: white
+}
+
 .container {
     width: 100%;
     height: 100%;

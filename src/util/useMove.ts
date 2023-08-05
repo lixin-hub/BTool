@@ -1,5 +1,7 @@
 // 可拖拽组件：pc和Mobile
-function useMove(el: any) {
+function useMove(el: any, pos: any) {
+    let start = '-1';
+    let i = pos.x
     el.style.position = 'fixed';
     let offsetX: number, offsetY: number, oL: number, oT: number, oLeft: number, oTop: number;
     const browser = {
@@ -35,10 +37,16 @@ function useMove(el: any) {
                             el.style.left = x + 'px';
                             el.style.top = y + 'px';
                         }
+                        if (start == "-1") {
+                            start = el.style.left
+                        }
+                        pos.x = Number.parseInt(start) - Number.parseInt(el.style.left) + i
                         return false;
                     }
                     document.addEventListener('mousemove', move);
                     const stop = function () {
+                        start = el.style.left
+                        i = pos.x
                         document.removeEventListener('mousemove', move);
                         document.removeEventListener('mouseup', stop);
                     }

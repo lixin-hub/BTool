@@ -63,7 +63,6 @@ function onDragEnd(e: any) {
     }
     if (!node) return
     pubsub.publish(Topics.NODE_ADD, { evt: e, node: cloneDeep(node) })
-    commonStore.addNode(e, cloneDeep(node));
     node = null
 }
 // onMounted(() => {

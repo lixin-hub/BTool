@@ -13,13 +13,15 @@
     "@howdyjs/mouse-menu": "^2.0.8",
     "@types/lodash": "^4.14.195",
     "ant-design-vue": "4.x",
+    "file-selector": "^0.6.0",
     "jsplumb": "^2.15.6",
     "pinia": "^2.1.4",
     "pubsub-js": "^1.9.4",
     "pubsub-ts": "^0.2.0",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4",
-    "vuedraggable": "^4.1.0"
+    "vuedraggable": "^4.1.0",
+    "wavesurfer.js": "^7.1.1"
   },
   "devDependencies": {
     "@types/pubsub-js": "^1.8.3",
