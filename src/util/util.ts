@@ -1,6 +1,5 @@
 import { DocNodeData, Line, MenuNodeData } from "@/types";
 import { message } from "ant-design-vue";
-import { FileWithPath, fromEvent } from 'file-selector';
 import { throttle } from 'lodash';
 function uuid(len: number, radix: number): string {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');

@@ -1,20 +1,23 @@
 <template>
-    <div class="l-side">
-        <div class="menu" v-for="(sub, index) in items" :key="sub.key">
-            <div class="menu-label" @click="menuClick(index)">
-                {{ sub.label }}
-            </div>
-            <div v-if="sub.children" class="sub-menu">
-                <draggable @end="onDragEnd" :list="sub.children" itemKey="label" :sort="false">
-                    <template #item="{ element }">
-                        <div class="menu-item" :id="element.key">
-                            <MenuNode :nodeData="element">
-                            </MenuNode>
-                        </div>
-                    </template>
-                </draggable>
+    <div class="container" :style="sideStyle">
+        <div class="l-side">
+            <div class="menu" v-for="(sub, index) in items" :key="sub.key">
+                <div class="menu-label" @click="menuClick(index)">
+                    {{ sub.label }}
+                </div>
+                <div v-if="sub.children" class="sub-menu">
+                    <draggable @end="onDragEnd" :list="sub.children" itemKey="label" :sort="false">
+                        <template #item="{ element }">
+                            <div class="menu-item" :id="element.key">
+                                <MenuNode :nodeData="element">
+                                </MenuNode>
+                            </div>
+                        </template>
+                    </draggable>
+                </div>
             </div>
         </div>
+        <div class="drag-bar" @mousedown="startDrag"></div>
     </div>
 </template>
 <script lang="ts" setup>
@@ -65,50 +68,76 @@ function onDragEnd(e: any) {
     pubsub.publish(Topics.NODE_ADD, { evt: e, node: cloneDeep(node) })
     node = null
 }
-// onMounted(() => {
-//     const els = document.getElementsByClassName("menu-item");
-//     for (let index = 0; index < els.length; index++) {
-//         const element = els[index];
-//         useMove(element);
-//     }
-// })
+let startX = 0
+const sideStyle = reactive({
+    width: "190px"
+})
+
+const startDrag = (e: { clientX: number; }) => {
+    startX = e.clientX;
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', stopDrag);
+};
+
+const drag = (e: { clientX: number; }) => {
+    const offsetX = -startX + e.clientX;
+    sideStyle.width = Number.parseInt(sideStyle.width) + offsetX + 'px';
+    startX = e.clientX;
+
+};
+
+const stopDrag = () => {
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('mouseup', stopDrag);
+};
+
 </script>
 <style scoped lang="scss">
-.l-side {
+.container {
+    display: flex;
+    flex-direction: row;
+    background-color: white;
     height: 100%;
-    overflow: auto;
-}
+    overflow: scroll;
 
-.menu {
-    .menu-label {
-        height: 40px;
-        width: 100%;
-        padding-left: 20px;
-        line-height: 40px;
-        background-color: gray;
-        border-bottom: 1px black solid;
+    .l-side {
+        flex-grow: 1;
+        height: 100%;
+        overflow: auto;
+        background-color: white;
+
+        .menu {
+
+            .menu-label {
+                height: 40px;
+                width: 100%;
+                padding-left: 20px;
+                line-height: 40px;
+                background-color: gray;
+                border-bottom: 1px black solid;
+            }
+
+            .menu-item {
+                // width: 99%;
+                width: 150px;
+                margin: 10px 20px;
+            }
+
+        }
     }
 
-    .menu-item {
-        margin: 10px 20px;
+    .drag-bar {
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 10px;
+        z-index: 1000;
+        border-radius: 5px;
+        height: 250px;
+        // top: 50px;
+        background-color: #c2177b;
+        cursor: ew-resize;
     }
 
-}
-
-.open {
-    height: auto;
-}
-
-.close {
-    display: none;
-}
-
-.ghost {
-    border: solid 1px rgb(19, 41, 239);
-}
-
-.chosenClass {
-    background-color: #f1f1f1;
 }
 </style>
   

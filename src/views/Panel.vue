@@ -20,20 +20,21 @@
             <Wave></Wave>
         </a-layout-footer>
     </a-layout> -->
-    <a-layout class="container">
-        <a-layout-sider class="lside">
-            <Lside></Lside>
-        </a-layout-sider>
-        <a-layout-content class="content">
-            <a-layout class="center">
-                <Documention></Documention>
-                <Rside></Rside>
-            </a-layout>
-            <a-layout class="footer">
-                <Wave></Wave>
-            </a-layout>
-        </a-layout-content>
-    </a-layout>
+    <div class="container">
+        <div class="main">
+            <Lside class="lside"></Lside>
+            <a-layout-content class="content">
+                <a-layout class="center">
+                    <Documention></Documention>
+                    <Rside></Rside>
+                </a-layout>
+                <a-layout class="footer">
+                    <Wave></Wave>
+                </a-layout>
+            </a-layout-content>
+        </div>
+
+    </div>
 </template>
 <script lang="ts" setup>
 import { Documention } from '@/components/Document'
@@ -79,34 +80,45 @@ onUnmounted(() => {
 .container {
     background-color: white;
     height: 100vh;
+    // overflow: hidden;
+    overflow: scroll;
+    display: flex;
+    flex-direction: column;
+
+    .main {
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+
+        .lside {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+
+            .center {
+                flex-grow: 1;
+                flex-direction: row;
+                display: flex;
+            }
+
+            .footer {
+                flex-shrink: 0;
+                flex-grow: 0;
+            }
+        }
+
+    }
 
     .footer {}
 
-    .content {
-        display: flex;
-        height: 100%;
-        flex-direction: column;
 
-        .footer {
-            flex-grow: 0;
-        }
 
-        .center {
-            flex-grow: 1;
-            flex-direction: row;
-            display: flex;
 
-            .rslide {
-
-                height: 100%;
-                background-color: white;
-            }
-        }
-    }
-
-    .lside {
-        background-color: white;
-    }
 }
 </style>
   

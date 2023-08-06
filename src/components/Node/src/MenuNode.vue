@@ -24,7 +24,7 @@ defineProps<{ nodeData: MenuNodeData }>()
 }
 
 .node {
-    width: 150px;
+    width: 100%;
     font-size: small;
     color: white;
     line-height: 30px;

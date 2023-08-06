@@ -1,42 +1,39 @@
 <template>
-    <div id="container">
-        <div id="sidebar"></div>
-        <a-layout-sider breakpoint="xl" :collapsedWidth="0" :width="pos.x">
-            <a-table size="small" class="root" :pagination="false" bordered :data-source="dataSource" :columns="columns">
-                <template #bodyCell="{ column, text, record }">
-                    <template v-if="column.dataIndex === 'value' && record.editable">
-                        <div class="editable-cell">
-                            <div v-if="editableData[record.key]" class="editable-cell-input-wrapper">
-                                <a-input v-model:value="editableData[record.key].value" @pressEnter="save(record.key)" />
-                                <check-outlined class="editable-cell-icon-check" @click="save(record.key)" />
-                            </div>
-                            <div v-else class="editable-cell-text-wrapper">
-                                {{ text || ' ' }}
-                                <edit-outlined class="editable-cell-icon" @click="edit(record.key)" />
-                            </div>
+    <div id="container" :collapsedWidth="0" :style="sideStyle">
+        <div class="drag-bar" @mousedown="startDrag"></div>
+        <a-table size="small" class="root" :pagination="false" bordered :data-source="dataSource" :columns="columns">
+            <template #bodyCell="{ column, text, record }">
+                <template v-if="column.dataIndex === 'value' && record.editable">
+                    <div class="editable-cell">
+                        <div v-if="editableData[record.key]" class="editable-cell-input-wrapper">
+                            <a-input v-model:value="editableData[record.key].value" @pressEnter="save(record.key)" />
+                            <check-outlined class="editable-cell-icon-check" @click="save(record.key)" />
                         </div>
-                    </template>
-                    <template v-else-if="column.dataIndex === 'key'">
-                        <label class="editable-cell-key">
-                            {{ record.key }}
-                        </label>
-                    </template>
+                        <div v-else class="editable-cell-text-wrapper">
+                            {{ text || ' ' }}
+                            <edit-outlined class="editable-cell-icon" @click="edit(record.key)" />
+                        </div>
+                    </div>
                 </template>
-            </a-table>
-        </a-layout-sider>
+                <template v-else-if="column.dataIndex === 'key'">
+                    <label class="editable-cell-key">
+                        {{ record.key }}
+                    </label>
+                </template>
+            </template>
+        </a-table>
     </div>
 </template>
 <script lang="ts" setup>
-import { reactive, ref, watch, toRaw, onMounted } from 'vue';
+import { reactive, ref, watch, toRaw } from 'vue';
 import type { Ref, UnwrapRef } from 'vue';
 import { CheckOutlined, EditOutlined } from '@ant-design/icons-vue';
 import { cloneDeep } from 'lodash';
 import useCommonStore from '@/store/common'
 import { storeToRefs } from 'pinia';
 import { DocNodeData } from '@/types';
-import useMove from '@/util/useMove';
+// import useMove from '@/util/useMove';
 const store = useCommonStore()
-
 interface DataItem {
     key: string;
     value: string;
@@ -53,14 +50,6 @@ const columns = [
         dataIndex: 'value',
     },
 ];
-let pos = reactive({ x: 250, y: 0 })
-// watch(pos, function (newData) {
-//     console.log(newData.x);
-
-// })
-onMounted(() => {
-    useMove(document.getElementById("sidebar"), pos)
-})
 const dataSource: Ref<DataItem[]> = ref([]);
 const { activeNode } = storeToRefs(store)
 watch(activeNode, function (newData) {
@@ -80,6 +69,7 @@ watch(activeNode, function (newData) {
     }
 })
 
+
 const editableData: UnwrapRef<Record<string, DataItem>> = reactive({});
 
 const edit = (key: string) => {
@@ -89,32 +79,50 @@ const save = (key: string) => {
     Object.assign(dataSource.value.filter(item => key === item.key)[0], editableData[key]);
     delete editableData[key];
 };
+let startX = 0
+const sideStyle = reactive({
+    width: "200px"
+})
+
+const startDrag = (e: { clientX: number; }) => {
+    startX = e.clientX;
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', stopDrag);
+};
+
+const drag = (e: { clientX: number; }) => {
+    const offsetX = startX - e.clientX;
+    sideStyle.width = Number.parseInt(sideStyle.width) + offsetX + 'px';
+    startX = e.clientX;
+};
+
+const stopDrag = () => {
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('mouseup', stopDrag);
+};
 
 </script>
 <style lang="scss" scoped>
 #container {
     display: flex;
+    flex-direction: row;
     background-color: white;
     height: 100%;
+    overflow: scroll;
 
-    #sidebar {
-        border-radius: 10px;
+    .drag-bar {
+        flex-shrink: 0;
+        right: 100px;
+        width: 10px;
         z-index: 1000;
-        height: 50px;
-        align-self: center;
-        width: 20px;
-        margin-right: 8px;
-        background-color: rgba(27, 123, 248, 0.438);
-        overflow: hidden;
-    }
-
-    #sidebar:hover {
-        margin-right: 10px;
-        background-color: rgb(39, 76, 243);
-        cursor: move;
+        border-radius: 5px;
+        height: 250px;
+        background-color: #cf0c0c;
+        cursor: ew-resize;
     }
 
     .root {
+
         flex-grow: 1;
         width: 100%;
         height: 100%;

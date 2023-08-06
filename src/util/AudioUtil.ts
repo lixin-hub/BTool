@@ -65,7 +65,7 @@ export function fileToAudioBuffer(file: File): Promise<AudioBuffer> {
  */
 export function convertAudioBufferToBlob(abuffer: AudioBuffer): Promise<Blob> {
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         // Convert AudioBuffer to a Blob using WAVE representation
         let numOfChan = abuffer.numberOfChannels,
             len = abuffer.getChannelData(0).length,
@@ -134,45 +134,6 @@ export function convertAudioBufferToBlob(abuffer: AudioBuffer): Promise<Blob> {
     })
 }
 
-/**
- * 创建 WAVE 头部并返回 ArrayBuffer
- * @param channelsData 每个通道的音频数据
- * @param sampleRate 采样率
- * @returns 包含 WAVE 头部的 ArrayBuffer
- */
-function createWaveHeader(channelsData: Float32Array[], sampleRate: number): ArrayBuffer {
-    const numberOfChannels = channelsData.length;
-    const channelLength = channelsData[0].length;
-    const buffer = new ArrayBuffer(44 + channelLength * numberOfChannels * 2);
-    const view = new DataView(buffer);
-
-    function writeString(view: DataView, offset: number, string: string) {
-        for (let i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i));
-        }
-    }
-
-    // RIFF 标头
-    writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + channelLength * numberOfChannels * 2, true);
-    writeString(view, 8, 'WAVE');
-
-    // 格式块
-    writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true); // fmt 块的大小
-    view.setUint16(20, 1, true); // 格式类型（PCM）
-    view.setUint16(22, numberOfChannels, true); // 通道数
-    view.setUint32(24, sampleRate, true); // 采样率
-    view.setUint32(28, sampleRate * numberOfChannels * 2, true); // 数据速率
-    view.setUint16(32, numberOfChannels * 2, true); // 数据块对齐
-    view.setUint16(34, 16, true); // 采样位深度
-
-    // 数据块
-    writeString(view, 36, 'data');
-    view.setUint32(40, channelLength * numberOfChannels * 2, true); // 音频数据的大小
-
-    return buffer;
-}
 
 /**
  * 将 Blob 对象保存为文件
