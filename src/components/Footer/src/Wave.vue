@@ -44,7 +44,20 @@ const options: WaveSurferOptions = {
 
 }
 onMounted(() => {
+    init()
+})
+watch(store.wavedata, async (newData) => {
+    if (newData.file) {
+        init()
+        ws.loadBlob(newData.file).catch(() => {
+            message.error("发生错误")
+            loadWaveMessage()
+        })
+    }
+})
 
+function init() {
+    if (ws) ws.destroy()
     ws = WaveSurfer.create(options)
     wsRegions = ws.registerPlugin(RegionsPlugin.create())
 
@@ -60,13 +73,13 @@ onMounted(() => {
         // Regions
         wsRegions.addRegion({
             start: 0,
-            end: 100,
+            end: 15,
             color: randomColor(),
         })
     })
     /** When a waveform is drawn */
     ws.on('redraw', () => {
-        loadWaveMessage?.call(this)
+        loadWaveMessage()
     })
 
 
@@ -81,17 +94,8 @@ onMounted(() => {
         e.stopPropagation() // prevent triggering a click on the waveform
         // activeRegion = region
         region.play()
-        region.setOptions({ color: randomColor() })
+        region.setOptions({ color: "rgba(145, 252, 74,0.5)" })
     })
-
-})
-watch(store.wavedata, async (newData) => {
-    if (newData.file) {
-        ws.loadBlob(newData.file).catch(() => {
-            message.error("发生错误")
-            loadWaveMessage?.call(this)
-        })
-    }
-})
+}
 </script>
 <style  scoped></style>

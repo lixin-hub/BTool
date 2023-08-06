@@ -1,26 +1,11 @@
 import { DocNodeData, Line, MenuNodeData, NodeType, StreamType } from '@/types';
-import { EndpointOptions } from 'jsplumb';
-import { cloneDeep, lte } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { defineStore } from 'pinia'
-import { openFileManager } from '@/util/util';
-import useCommonStore from '@/store/common';
-let endPointOptions: Array<EndpointOptions> = [
-    // {
-    //     maxConnections: 1,
-    //     anchor: 'Left',
-    //     isSource: false,
-    //     isTarget: true
-    // }, 
-    {
-        maxConnections: 1,
-        anchor: 'Right',
-        isTarget: false,
-        isSource: true
-    }
-]
-
+import { UUID, openFileManager } from '@/util/util';
+import { fileToAudioBuffer, trimAudioFromBuffer, trimAudioFromFile, convertAudioBufferToBlob, saveBlobAsFile } from '@/util/AudioUtil';
 const defaultContextMenu = [
     {
+
         label: '复制',
         tips: 'Open',
         fn: () => {
@@ -45,248 +30,238 @@ const defaultContextMenu = [
         }
     }
 ]
+let inputDefault = {
+    type: NodeType.TYPE_INPUT,
+    maxInputNum: 1,
+    inputType: StreamType.NONE,
+    outputType: StreamType.AUDIO,
+}
 const children_1: Array<MenuNodeData> = [{
     key: "1-1",
     icon: '',
     label: "音频文件输入",
-    inputNum: 0,
-    endPointOptions,
-    inputType: StreamType.NONE,
-    outputType: StreamType.AUDIO,
-    async doubleClick(e) {
-        const store = useCommonStore()
-
+    ...inputDefault,
+    async doubleClick() {
+        const store = useStore()
         let file = await openFileManager(".mp3")
-        console.log(file);
         this.playload = file
         store.wavedata.file = file
     },
+    exec: async function (playload: File): Promise<AudioBuffer> {
+        let audioBuffeawait = await fileToAudioBuffer(playload || this.playload)
+        console.log(audioBuffeawait);
+        return audioBuffeawait;
+    }
 }, {
     key: "1-2",
     icon: '',
     label: "从视频输入",
-    inputNum: 0,
-    endPointOptions,
-    inputType: StreamType.NONE,
-    outputType: StreamType.AUDIO
+    ...inputDefault
 }, {
     key: "1-3",
     icon: '',
     label: "网络音频输入",
-    inputNum: 0,
-    endPointOptions,
-    inputType: StreamType.NONE,
-    outputType: StreamType.AUDIO
+    ...inputDefault
+
 }, {
-    type: NodeType.TYPE_INPUT,
     key: "1-4",
     icon: '',
     label: "文本输入",
-    inputNum: 0,
-    endPointOptions,
-    inputType: StreamType.NONE,
-    outputType: StreamType.AUDIO
+    ...inputDefault
 }]
+let processDefault = {
+    type: NodeType.TYPE_AUDIO_PROCESS,
+    inputType: StreamType.AUDIO,
+    outputType: StreamType.AUDIO,
+    maxInputNum: 1,
+}
 const children_2: Array<MenuNodeData> = [
     {
         key: "2-1",
         icon: '',
         label: "裁减",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO,
+        ...processDefault,
+        start: 0,//起始
+        end: 20,//结束
+        exec: async function (playload: File | AudioBuffer, start: number, end: number): Promise<AudioBuffer> {
+            this.playload = playload
+            return (playload instanceof File) ? await trimAudioFromFile(playload, start || this.start, end || this.end) : trimAudioFromBuffer(playload, start || this.start, end || this.end)
+        }
     }, {
         key: "2-2",
         icon: '',
         label: "合并",
-        endPointOptions: Array<EndpointOptions>(
-            {
-                maxConnections: 2,
-                anchor: 'Left',
-            }, {
-            maxConnections: 1,
-            anchor: 'Right',
-        }
-        ),
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO,
-        inputNum: 2
+        ...processDefault,
+        maxInputNum: 2
     }, {
         key: "2-3",
         icon: '',
         label: "淡入",
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO,
-        inputNum: 1
+        ...processDefault,
     }, {
         key: "2-4",
         icon: '',
         label: "淡出",
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO,
-        inputNum: 1
+        ...processDefault,
+
     },
 ]
+let transDefault = {
+    type: NodeType.TYPE_AUDIO_TRANS,
+    inputType: StreamType.AUDIO,
+    outputType: StreamType.AUDIO,
+    maxInputNum: 1,
+}
 const children_3: Array<MenuNodeData> = [
 
     {
-        type: NodeType.TYPE_AUDIO_TRANS,
         key: "3-1",
         icon: '',
         label: "转为MP3",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-2",
         icon: '',
         label: "转为WAV",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
     }, {
         key: "3-3",
         icon: '',
         label: "转为AAC",
-        endPointOptions,
-
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
     }, {
         key: "3-4",
         icon: '',
         label: "转为AIFF",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-5",
         icon: '',
         label: "转为M4A",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-6",
         icon: '',
         label: "转为M4R",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-7",
         icon: '',
         label: "转为MMF",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-8",
         icon: '',
         label: "转为OGG",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-9",
         icon: '',
         label: "转为MIDI",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-10",
         icon: '',
         label: "转为OPUS",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
+
     }, {
         key: "3-11",
         icon: '',
         label: "转为WMA",
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.AUDIO
+        ...transDefault,
     },
 ]
+let aidDfault = {
+    type: NodeType.TYPE_AUDIO_PROCESS,
+    inputType: StreamType.AUDIO,
+    outputType: StreamType.AUDIO,
+    maxInputNum: 1,
+}
+
 const children_4: Array<MenuNodeData> = [{
     key: "4-1",
     icon: '',
     label: "语音降噪",
-    endPointOptions,
-    inputType: StreamType.AUDIO,
-    outputType: StreamType.AUDIO
+    ...aidDfault
 }, {
     key: "4-2",
     icon: '',
     label: "回声消除",
-    endPointOptions,
-    inputType: StreamType.AUDIO,
-    outputType: StreamType.AUDIO
+    ...aidDfault
+
 }, {
     key: "4-3",
     icon: '',
     label: "文本合成语音",
-    endPointOptions,
-    inputType: StreamType.AUDIO,
-    outputType: StreamType.AUDIO
+    ...aidDfault
+
 }, {
     key: "4-4",
     icon: '',
     label: "说话人确认",
-    endPointOptions,
-    inputType: StreamType.AUDIO,
-    outputType: StreamType.AUDIO
+    ...aidDfault
+
 }, {
     key: "4-5",
     icon: '',
     label: "语音转文本",
-    endPointOptions,
-    inputType: StreamType.AUDIO,
-    outputType: StreamType.AUDIO
+    ...aidDfault
+
 }, {
     key: "4-6",
     icon: '',
     label: "文本翻译",
-    endPointOptions,
-    inputType: StreamType.AUDIO,
-    outputType: StreamType.AUDIO
+    ...aidDfault
+
 },
 ]
+let outputDefault = {
+    type: NodeType.TYPE_OUTPUT,
+    maxOutputNum: 0,
+    maxInputNum: 1,
+    inputType: StreamType.AUDIO,
+    outputType: StreamType.FILE
+}
 const children_5: Array<MenuNodeData> = [
     {
         key: "5-1",
         icon: '',
         label: "输出到文件",
-        outputNum: 0,
-        endPointOptions,
-        inputType: StreamType.AUDIO,
-        outputType: StreamType.FILE
+        ...outputDefault,
+        name: UUID(10),
+        exec: async function (playload: AudioBuffer, name: string) {
+            let blob = await convertAudioBufferToBlob(playload);
+            const store = useStore()
+            store.wavedata.file = blob
+            await saveBlobAsFile(blob, name || 'trimmed_audio.wav');
+        }
     }, {
         key: "5-2",
         icon: '',
         label: "输出到扬声器",
-        outputNum: 0,
-        endPointOptions,
-        inputType: StreamType.AUDIO,
+        ...outputDefault,
         outputType: StreamType.SPEAKER
     }, {
         key: "5-3",
         icon: '',
         label: "输出到文本文件",
-        outputNum: 0,
-        endPointOptions,
-        inputType: StreamType.AUDIO,
+        ...outputDefault,
+
         outputType: StreamType.TXT
 
     }, {
         key: "5-4",
         icon: '',
         label: "输出到显示器",
-        endPointOptions,
-        outputNum: 0,
-        inputType: StreamType.AUDIO,
+        ...outputDefault,
         outputType: StreamType.MONITOR
     },
 ]
@@ -295,18 +270,6 @@ let childrens = [children_1, children_2, children_3, children_4, children_5]
 childrens.forEach((children) => {
     children.forEach((c) => {
         let child = c as MenuNodeData
-        if (child.inputNum === undefined) {
-            child.inputNum = 1;
-        }
-        if (child.maxInputNum === undefined) {
-            child.maxInputNum = child.inputNum;
-        }
-        if (child.outputNum === undefined) {
-            child.outputNum = 1;
-        }
-        if (child.maxOutputNum === undefined) {
-            child.maxOutputNum = child.inputNum;
-        }
         if (child.contextMenuItems) {
             child.contextMenuItems = [...child.contextMenuItems, ...cloneDeep(defaultContextMenu)]
         } else {
@@ -352,7 +315,7 @@ const menuItems: Array<MenuNodeData> = [
 ]
 
 
-export default defineStore('common', {
+const useStore = defineStore('common', {
     state: () => {
         return {
             //菜单项
@@ -363,9 +326,11 @@ export default defineStore('common', {
             activeNode: {} as DocNodeData,
             activeLine: {} as Line,
             wavedata: {//示波器数据
-                file: {} as File
-            }
+                file: {} as Blob
+            },
+            sortedNodeList: Array<DocNodeData>(),
         }
     },
 
 });
+export default useStore;

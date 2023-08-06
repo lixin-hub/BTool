@@ -166,7 +166,7 @@ export interface GraphNode {
     outputs: string[];
 }
 //拓扑排序
-export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): DocNodeData[] | null {
+export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): DocNodeData[] {
     const graph: { nodes: GraphNode[]; edges: Line[] } = {
         nodes: [],
         edges: []
@@ -231,10 +231,8 @@ export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): 
     const hasCycle = graph.nodes.some(node => node.inputs.length > 0);
     if (hasCycle) {
         message.error('有向图中存在循环依赖，无法形成有序的输出');
-        return null;
+        return [];
     }
-
-
     return orderedNodes;
 }
 

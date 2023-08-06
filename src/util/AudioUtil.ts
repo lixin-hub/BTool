@@ -1,38 +1,39 @@
 /**
- * 
  * @param audioBuffer 待处理音频流
- * @param start 起始
- * @param end 结束
- * @returns 新的audiobuffer
+ * @param start 起始时间（秒）
+ * @param end 结束时间（秒）
+ * @returns 新的AudioBuffer
  */
-export function trimAudio(audioBuffer: AudioBuffer, start: number, end: number): AudioBuffer {
-    const audioCtx = new AudioContext();
-    const sourceNode = audioCtx.createBufferSource();
-    sourceNode.buffer = audioBuffer;
+export function trimAudioFromBuffer(audioBuffer: AudioBuffer, start: number, end: number): AudioBuffer {
+    // 声道数量和采样率
+    var channels = audioBuffer.numberOfChannels;
+    var rate = audioBuffer.sampleRate;
 
-    const duration = end - start;
-    const destinationBuffer = audioCtx.createBuffer(audioBuffer.numberOfChannels, duration, audioBuffer.sampleRate);
-
-    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-        const inputData = audioBuffer.getChannelData(channel);
-        const outputData = destinationBuffer.getChannelData(channel);
-        const startOffset = start * audioBuffer.sampleRate;
-        const endOffset = end * audioBuffer.sampleRate;
-
-        for (let i = startOffset, j = 0; i < endOffset; i++, j++) {
-            outputData[j] = inputData[i];
-        }
+    // 截取前3秒
+    var startOffset = start;
+    var endOffset = rate * end;
+    var frameCount = endOffset - startOffset;
+    // 创建同样采用率、同样声道数量，长度是前3秒的空的AudioBuffer
+    var newAudioBuffer = new AudioContext().createBuffer(channels, endOffset - startOffset, rate);
+    // 创建临时的Array存放复制的buffer数据
+    var anotherArray = new Float32Array(frameCount);
+    // 声道的数据的复制和写入
+    var offset = 0;
+    for (var channel = 0; channel < channels; channel++) {
+        audioBuffer.copyFromChannel(anotherArray, channel, startOffset);
+        newAudioBuffer.copyToChannel(anotherArray, channel, offset);
     }
 
-    sourceNode.buffer = destinationBuffer;
-    sourceNode.connect(audioCtx.destination);
-    sourceNode.start();
-
-    return destinationBuffer;
+    // newAudioBuffer就是全新的复制的3秒长度的AudioBuffer对象
+    return newAudioBuffer;
 }
+
+/**
+ * 从文件裁切音频
+ */
 export async function trimAudioFromFile(file: File, start: number, end: number): Promise<AudioBuffer> {
     let audioBuffer = await fileToAudioBuffer(file);
-    return trimAudio(audioBuffer, start, end);
+    return trimAudioFromBuffer(audioBuffer, start, end);
 }
 /**
  *  将文件转换为AudioBuffer
@@ -58,89 +59,135 @@ export function fileToAudioBuffer(file: File): Promise<AudioBuffer> {
     });
 }
 /**
- * 将 AudioBuffer 对象保存为本地音频文件。
- * @param audioBuffer 要保存的 AudioBuffer 对象。
- * @param filename 要保存的文件名，包括文件扩展名（例如：'audio.wav'）。
- * @returns 一个 Promise，当音频文件保存成功时解析，保存失败时拒绝。
+ * 将 AudioBuffer 转换为 Blob 对象
+ * @param audioBuffer 待转换的 AudioBuffer
+ * @returns 转换后的 Blob 对象
  */
-export function audioBufferToFile(audioBuffer: AudioBuffer, filename: string): Promise<void> {
+export function convertAudioBufferToBlob(abuffer: AudioBuffer): Promise<Blob> {
+
     return new Promise((resolve, reject) => {
-        const offlineCtx = new OfflineAudioContext({
-            numberOfChannels: audioBuffer.numberOfChannels,
-            length: audioBuffer.length,
-            sampleRate: audioBuffer.sampleRate
-        });
+        // Convert AudioBuffer to a Blob using WAVE representation
+        let numOfChan = abuffer.numberOfChannels,
+            len = abuffer.getChannelData(0).length,
+            length = len * numOfChan * 2 + 44,
+            buffer = new ArrayBuffer(length),
+            view = new DataView(buffer),
+            channels = [], i, sample,
+            offset = 0,
+            pos = 0;
 
-        const source = offlineCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(offlineCtx.destination);
-        source.start();
+        // write WAVE header
+        // "RIFF"
+        setUint32(0x46464952);
+        // file length - 8                      
+        setUint32(length - 8);
+        // "WAVE"                     
+        setUint32(0x45564157);
+        // "fmt " chunk
+        setUint32(0x20746d66);
+        // length = 16                       
+        setUint32(16);
+        // PCM (uncompressed)                               
+        setUint16(1);
+        setUint16(numOfChan);
+        setUint32(abuffer.sampleRate);
+        // avg. bytes/sec
+        setUint32(abuffer.sampleRate * 2 * numOfChan);
+        // block-align
+        setUint16(numOfChan * 2);
+        // 16-bit (hardcoded in this demo)
+        setUint16(16);
+        // "data" - chunk
+        setUint32(0x61746164);
+        // chunk length                   
+        setUint32(length - pos - 4);
 
-        offlineCtx.oncomplete = (event: OfflineAudioCompletionEvent) => {
-            const renderedBuffer = event.renderedBuffer;
-            const audioData = new Float32Array(renderedBuffer.length * renderedBuffer.numberOfChannels);
+        // write interleaved data
+        for (i = 0; i < abuffer.numberOfChannels; i++)
+            channels.push(abuffer.getChannelData(i));
 
-            for (let channel = 0; channel < renderedBuffer.numberOfChannels; channel++) {
-                const channelData = renderedBuffer.getChannelData(channel);
-                audioData.set(channelData, channel * renderedBuffer.length);
+        while (pos < length) {
+            // interleave channels
+            for (i = 0; i < numOfChan; i++) {
+                // clamp
+                sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                // scale to 16-bit signed int
+                sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+                // write 16-bit sample
+                view.setInt16(pos, sample, true);
+                pos += 2;
             }
+            // next source sample
+            offset++
+        }
+        // create Blob
+        function setUint16(data: number) {
+            view.setUint16(pos, data, true);
+            pos += 2;
+        }
 
-            const wavBuffer = new ArrayBuffer(44 + audioData.byteLength);
-            const dv = new DataView(wavBuffer);
-
-            function writeString(offset: number, str: string) {
-                for (let i = 0; i < str.length; i++) {
-                    dv.setUint8(offset + i, str.charCodeAt(i));
-                }
-            }
-
-            function writeUint32(offset: number, value: number) {
-                dv.setUint32(offset, value, true);
-            }
-
-            function writeUint16(offset: number, value: number) {
-                dv.setUint16(offset, value, true);
-            }
-
-            // WAV 文件头部
-            writeString(0, 'RIFF');                           // ChunkID
-            writeUint32(4, 36 + audioData.byteLength);        // ChunkSize
-            writeString(8, 'WAVE');                           // Format
-            writeString(12, 'fmt ');                          // Subchunk1ID
-            writeUint32(16, 16);                               // Subchunk1Size
-            writeUint16(20, 1);                                // AudioFormat (PCM)
-            writeUint16(22, audioBuffer.numberOfChannels);     // NumChannels
-            writeUint32(24, audioBuffer.sampleRate);           // SampleRate
-            writeUint32(28, audioBuffer.sampleRate * 2);       // ByteRate
-            writeUint16(32, 2);                                // BlockAlign
-            writeUint16(34, 16);                               // BitsPerSample
-            writeString(36, 'data');                           // Subchunk2ID
-            writeUint32(40, audioData.byteLength);             // Subchunk2Size
-
-            // 音频数据
-            const audioDataOffset = 44;
-            const wavDataView = new DataView(wavBuffer, audioDataOffset);
-
-            for (let i = 0; i < audioData.length; i++) {
-                const sample = Math.max(-1, Math.min(1, audioData[i]));
-                const sampleInt = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-                wavDataView.setInt16(i * 2, sampleInt, true);
-            }
-
-            const blob = new Blob([dv], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-
-            link.href = url;
-            link.download = filename;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-
-            resolve();
-        };
-
-        offlineCtx.startRendering();
-    });
+        function setUint32(data: number) {
+            view.setUint32(pos, data, true);
+            pos += 4;
+        }
+        resolve(new Blob([buffer], { type: "audio/wav" }))
+    })
 }
+
+/**
+ * 创建 WAVE 头部并返回 ArrayBuffer
+ * @param channelsData 每个通道的音频数据
+ * @param sampleRate 采样率
+ * @returns 包含 WAVE 头部的 ArrayBuffer
+ */
+function createWaveHeader(channelsData: Float32Array[], sampleRate: number): ArrayBuffer {
+    const numberOfChannels = channelsData.length;
+    const channelLength = channelsData[0].length;
+    const buffer = new ArrayBuffer(44 + channelLength * numberOfChannels * 2);
+    const view = new DataView(buffer);
+
+    function writeString(view: DataView, offset: number, string: string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    // RIFF 标头
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + channelLength * numberOfChannels * 2, true);
+    writeString(view, 8, 'WAVE');
+
+    // 格式块
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // fmt 块的大小
+    view.setUint16(20, 1, true); // 格式类型（PCM）
+    view.setUint16(22, numberOfChannels, true); // 通道数
+    view.setUint32(24, sampleRate, true); // 采样率
+    view.setUint32(28, sampleRate * numberOfChannels * 2, true); // 数据速率
+    view.setUint16(32, numberOfChannels * 2, true); // 数据块对齐
+    view.setUint16(34, 16, true); // 采样位深度
+
+    // 数据块
+    writeString(view, 36, 'data');
+    view.setUint32(40, channelLength * numberOfChannels * 2, true); // 音频数据的大小
+
+    return buffer;
+}
+
+/**
+ * 将 Blob 对象保存为文件
+ * @param blob 要保存的 Blob 对象
+ * @param filename 文件名
+ */
+export function saveBlobAsFile(blob: Blob, filename: string): Promise<void> {
+    return new Promise((resolve) => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        resolve()
+    })
+}
+
 

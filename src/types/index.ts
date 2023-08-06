@@ -34,22 +34,24 @@ export interface Line {
  * 菜单栏节点
  */
 export interface MenuNodeData {
-    type?: NodeType
+    type: NodeType
     key: string
     label?: string,
     icon?: string,
     prop?: string,//描述
     children?: Array<MenuNodeData>,
     endPointOptions?: Array<EndpointOptions>,//端点
-    outputNum?: number,//输出分支数
-    inputNum?: number,//输入分支数
-    maxInputNum?: number,
-    maxOutputNum?: number,
+    maxInputNum?: number,//输入分支数
+    maxOutputNum?: number,//输出分支数
     inputType?: StreamType,//输入
     outputType?: StreamType,//输出类型
     doubleClick?: (e: MouseEvent) => void,
     contextMenuItems?: MenuSetting[]//上下文菜单项,
-    playload?: any//结点保存的数据
+    playload?: any,//结点保存的数据
+    exec?: (playload?: any, ...params: any) => any,//执行函数,
+    validate?: () => Promise<boolean> | boolean,//校驗函数
+    [key: string]: any // 允许添加未定义的属性
+
 }
 /** 
  *文档内部使用的节点数据结构
@@ -62,6 +64,7 @@ export interface DocNodeData extends MenuNodeData {
 }
 
 //pubsub
+
 export enum Topics {
     NODE_ADD = "node_add",
     NODE_DELETE = "node_delete",
@@ -70,7 +73,7 @@ export enum Topics {
     CLEAR_ALL_NODES = "clear_all_nodes",
     EXEC_FLOW = "exec_flow",
     HIGHT_LIGHT_NODES = "hight_light_nodes",
-
+    DEHIGHT_LIGHT_NODES = "DEHIGHT_LIGHT_NODES"
 }
 //快捷键
 export enum ShortCut {

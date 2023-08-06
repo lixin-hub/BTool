@@ -13,7 +13,7 @@ import { CustomMouseMenu } from '@howdyjs/mouse-menu';
 import { Ref, nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from "vue";
 import jsPlumbSetting from "@/util/jsPlumbSetting";
 import useCommonStore from '@/store/common'
-import { DocNodeData, Line, StreamType, Topics, ShortCut } from "@/types";
+import { DocNodeData, Line, StreamType, Topics, ShortCut, NodeType } from "@/types";
 import { UUID, findDocNodeById, findMenuNodeByKey, createMousePositionTracker, findCycle, findParentNode } from "@/util/util";
 import { DocNode } from "@/components/Node";
 import { Connection, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
@@ -29,6 +29,7 @@ if (localNodesStr) {
     localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
     localNodes.forEach((node) => {
         node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
+        node.exec = findMenuNodeByKey(commonStore.menuItems, node.key)?.exec
     })
     commonStore.nodeList = localNodes
 }
@@ -107,7 +108,7 @@ function init() {
             }
             let tscope = instance.getTargetScope(to)
 
-            if (target.inputType == StreamType.NONE || target.inputNum == 0) {
+            if (target.type === NodeType.TYPE_INPUT || target.inputType == StreamType.NONE || target.maxInputNum == 0) {
                 message.error("输入结点只能输出")
                 return false
             }
@@ -116,7 +117,7 @@ function init() {
                 message.error('源节点的输出类型和目标节点的输入类型不匹配')
                 return false
             }
-            if (source.outputNum == 0) {
+            if (source.type === NodeType.TYPE_OUTPUT || source.maxOutputNum == 0) {
                 message.error("输出结点不能连接其它节点")
                 return false
             }
@@ -138,8 +139,8 @@ function init() {
 
             connections = connections.filter((item: any) => item.targetId === to)
 
-            if (connections.length >= ((target?.maxInputNum || target?.inputNum) || 1)) {
-                message.error("目标节点最大输入数量为:" + (target.maxInputNum || target.inputNum))
+            if (connections.length >= ((target?.maxInputNum) || 1)) {
+                message.error("目标节点最大输入数量为:" + (target.maxInputNum))
                 return false;
             }
 
@@ -212,7 +213,6 @@ function deleteLine(from: string, to: string): boolean {
 function deleteAllLine(nodeId: string) {
     let tscope = instance.getTargetScope(nodeId)
     let connections = instance.getConnections(tscope, { source: nodeId, target: nodeId })
-    console.log("conn", connections);
     connections = connections.filter((item: any) => item.targetId === nodeId || item.sourceId == nodeId)
     connections.forEach((conn: Connection) => {
         deleteLine(conn.sourceId, conn.targetId)
@@ -333,18 +333,20 @@ function hightLihtNode(ids: string | DocNodeData[], ms?: number, type?: string) 
                 let el: HTMLElement | null = document.getElementById(id.id)
                 if (!el) return
                 el.classList.add(type || 'error');
-                setTimeout(() => {
-                    el?.classList.remove(type || 'error');
-                }, ms || 4000)
+                if (ms != 0)
+                    setTimeout(() => {
+                        el?.classList.remove(type || 'error');
+                    }, ms || 4000)
             })
             return
         }
         let el: HTMLElement | null = document.getElementById(ids)
         if (!el) return
         el.classList.add(type || 'error');
-        setTimeout(() => {
-            deHightLihtNode(ids, type)
-        }, ms || 4000)
+        if (ms != 0)
+            setTimeout(() => {
+                deHightLihtNode(ids, type)
+            }, ms || 4000)
     })
 }
 //取消高亮指定节点
@@ -435,6 +437,7 @@ let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
         node = JSON.parse(text)
         if (!node) return
         node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
+        node.exec = findMenuNodeByKey(commonStore.menuItems, node.key)?.exec
     } catch {
 
     }
@@ -458,8 +461,12 @@ let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
     message.success("粘贴成功")
 })
 //高亮
-let unsubscribeHeight = pubsub.subscribe(Topics.HIGHT_LIGHT_NODES, (_, { ids, ms }) => {
-    hightLihtNode(ids, ms)
+let unsubscribeHeight = pubsub.subscribe(Topics.HIGHT_LIGHT_NODES, (_, { ids, ms, type }) => {
+    hightLihtNode(ids, ms, type)
+})
+//取消高亮
+let unsubscribeDeHeight = pubsub.subscribe(Topics.DEHIGHT_LIGHT_NODES, (_, { id, type }) => {
+    deHightLihtNode(id, type)
 })
 
 onUnmounted(function () {
@@ -470,6 +477,7 @@ onUnmounted(function () {
     pubsub.unsubscribe(unsubscribeDelete)
     pubsub.unsubscribe(unsubscribeAddNode)
     pubsub.unsubscribe(unsubscribeHeight)
+    pubsub.unsubscribe(unsubscribeDeHeight)
     mouseTracker.destroy()
 })
 </script>
@@ -490,9 +498,5 @@ onUnmounted(function () {
     // background-color: antiquewhite;
     position: relative;
 
-}
-
-#copy {
-    // opacity: 0;
 }
 </style>

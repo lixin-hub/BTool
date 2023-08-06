@@ -20,7 +20,7 @@ import { createDirectedGraph, findCycle, hasSingleNode } from '@/util/util'
 import { h } from 'vue';
 import pubsub from 'pubsub-js'
 import { DeleteOutlined } from '@ant-design/icons-vue';
-import { StreamType, Topics } from '@/types';
+import { NodeType, Topics } from '@/types';
 import useCommonStore from '@/store/common';
 import { NotificationPlacement, message } from 'ant-design-vue';
 import { notification } from 'ant-design-vue';
@@ -30,26 +30,44 @@ function clearAllNodes() {
     pubsub.publish(Topics.CLEAR_ALL_NODES)
 }
 //执行流程图
-function execFlow() {
+async function execFlow() {
     //校验
     if (!validation()) {
         return
     }
+    //排序
+    let sortedNode = createDirectedGraph(store.nodeList, store.lineList)
+    if (sortedNode.length == 0) return
     notification.info({
         message: `校验成功`,
         description: "111",
         duration: 2,
         placement: 'bootomRight' as NotificationPlacement
     });
-    //排序
-    let sortedNode = createDirectedGraph(store.nodeList, store.lineList)
+    store.sortedNodeList = sortedNode
+    let playload: any = null;
+    for (let i = 0; i < sortedNode.length; i++) {
+        let node = sortedNode[i]
+        if (node.exec) {
+            try {
+                pubsub.publish(Topics.HIGHT_LIGHT_NODES, { ids: node.id, ms: 0, type: "info" })
+                playload = await node.exec(playload)
+                pubsub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: node.id, type: "info" })
+                console.log("exec", node.label, playload);
+            } catch {
+                pubsub.publish(Topics.HIGHT_LIGHT_NODES, { ids: node.id, ms: 5000, type: "error" })
+                pubsub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: node.id, type: "info" })
+                message.error("发生错误")
+                return
+            }
+        }
+    }
 
     pubsub.publish(Topics.EXEC_FLOW, sortedNode)
 }
 
 function validation() {
     let temp = hasSingleNode(store.lineList, store.nodeList)
-    console.log(temp);
 
     if (temp.length > 0) {
         let ids = temp.map((i) => { return i.id })
@@ -59,13 +77,13 @@ function validation() {
     }
     //输入校验
     if (!store.nodeList.some((node) => {
-        return node.inputType == StreamType.NONE || node.inputNum == 0
+        return node.type === NodeType.TYPE_INPUT
     })) {
         message.error("没有输入节点")
         return false
     } //输出校验
     if (!store.nodeList.some((node) => {
-        return node.outputNum == 0
+        return node.type === NodeType.TYPE_OUTPUT
     })) {
         message.error("没有输出节点")
         return false
