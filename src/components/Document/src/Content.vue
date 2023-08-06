@@ -2,7 +2,8 @@
     <div ref="root" class="container" id="efContainer">
         <template v-for="node in nodeList" :key="node.key">
             <DocNode @dblclick="doubleClick" @click.right.prevent="showMenu" @changePostion="changePostion"
-                :node-data="node" :id="node.id" @click="onNodeClick(node)" @mouseenter="onNodeClick(node)">
+                :node-data="node" :id="node.id" @click="onNodeClick(node)" @mouseenter="onNodeClick(node)"
+                @mouseleave="mouseLeave">
             </DocNode>
         </template>
     </div>
@@ -14,7 +15,7 @@ import { Ref, nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } fr
 import jsPlumbSetting from "@/util/jsPlumbSetting";
 import useCommonStore from '@/store/common'
 import { DocNodeData, Line, StreamType, Topics, ShortCut, NodeType } from "@/types";
-import { UUID, findDocNodeById, findMenuNodeByKey, createMousePositionTracker, findCycle, findParentNode } from "@/util/util";
+import { UUID, findDocNodeById, findDocNodeByKey, createMousePositionTracker, findCycle, findParentNode } from "@/util/util";
 import { DocNode } from "@/components/Node";
 import { Connection, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
 import { message } from 'ant-design-vue';
@@ -28,8 +29,8 @@ let localNodes, localLines;
 if (localNodesStr) {
     localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
     localNodes.forEach((node) => {
-        node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
-        node.exec = findMenuNodeByKey(commonStore.menuItems, node.key)?.exec
+        node.doubleClick = findDocNodeByKey(commonStore.menuItems, node.key)?.doubleClick
+        node.exec = findDocNodeByKey(commonStore.menuItems, node.key)?.exec
     })
     commonStore.nodeList = localNodes
 }
@@ -169,17 +170,8 @@ function addNode(docNode: DocNodeData) {
     nextTick(function () {
         instance.makeSource(docNode.id, jsPlumbSetting.sourceOptions)
         instance.makeTarget(docNode.id, jsPlumbSetting.targetOptions)
+        instance.draggable(docNode.id)
 
-        instance.draggable(docNode.id, {
-            containment: 'parent',
-            stop: function (_el) {
-                // 拖拽节点结束后的对调
-                // console.log('拖拽结束: ', el)
-            }
-        })
-        // docNode.endPointOptions?.forEach((item) => {
-        //     instance.addEndpoint(docNode.id, { ...item, uuid: UUID(5) })
-        // })
     })
 }
 //删除节点
@@ -233,8 +225,11 @@ function hashOppositeLine(from: string, to: string): boolean {
     return hasLine(to, from)
 }
 function onNodeClick(node: DocNodeData) {
+    deHightLihtNode(activeNode.value.id, "active")
     activeNode.value = node
-
+    hightLihtNode(node.id, 0, "active")
+}
+function mouseLeave() {
 }
 //上下文菜单
 const showMenu = (event: MouseEvent) => {
@@ -399,8 +394,8 @@ let unsubscribeAddNode = pubsub.subscribe(Topics.NODE_ADD, (_: any, data: { evt:
     let y = top - 20 + 'px'
 
     const docNode: DocNodeData = {
-        id: UUID(),
         ...node,
+        id: UUID(),
         x, y,
     }
     addNode(docNode)
@@ -436,8 +431,8 @@ let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
         if (!text) return
         node = JSON.parse(text)
         if (!node) return
-        node.doubleClick = findMenuNodeByKey(commonStore.menuItems, node.key)?.doubleClick
-        node.exec = findMenuNodeByKey(commonStore.menuItems, node.key)?.exec
+        node.doubleClick = findDocNodeByKey(commonStore.menuItems, node.key)?.doubleClick
+        node.exec = findDocNodeByKey(commonStore.menuItems, node.key)?.exec
     } catch {
 
     }
@@ -482,16 +477,6 @@ onUnmounted(function () {
 })
 </script>
 <style scoped lang="scss">
-.error {
-    background-color: rgb(255, 48, 93);
-    color: black;
-}
-
-.info {
-    background-color: rgb(48, 131, 255);
-    color: white
-}
-
 .container {
     width: 100%;
     height: 100%;

@@ -64,8 +64,20 @@ function changePostion(_e: MouseEvent) {
     transition: opacity 0.3s ease-in-out;
 }
 
-.node:hover {
+.active {
+    background-color: rgb(96, 250, 255);
+    color: rgb(58, 55, 55);
     box-shadow: 0 0 5px 5px rgb(35, 124, 139);
-    opacity: 1;
+
+}
+
+.error {
+    background-color: rgb(255, 48, 93);
+    color: black;
+}
+
+.info {
+    background-color: rgb(48, 131, 255);
+    color: white
 }
 </style>

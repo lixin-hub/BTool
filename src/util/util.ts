@@ -40,12 +40,12 @@ export function findDocNodeById(docs: DocNodeData[], id: string): DocNodeData | 
     return undefined;
 }
 
-export function findMenuNodeByKey(menuItems: MenuNodeData[], key: string): MenuNodeData | undefined {
+export function findDocNodeByKey(menuItems: MenuNodeData[], key: string): DocNodeData | undefined {
     for (let children of menuItems) {
         if (children.children)
             for (let child of children.children) {
                 if (child.key === key)
-                    return child;
+                    return child as DocNodeData;
             }
 
     }

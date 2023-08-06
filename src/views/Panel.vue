@@ -80,6 +80,7 @@ onUnmounted(() => {
 .container {
     background-color: white;
     height: 100vh;
+    width: 100vw;
     // overflow: hidden;
     overflow: scroll;
     display: flex;
@@ -93,12 +94,14 @@ onUnmounted(() => {
         .lside {
             display: flex;
             flex-direction: row;
+            flex-shrink: 0;
         }
 
         .content {
             display: flex;
             flex-direction: column;
             flex-grow: 1;
+            flex-shrink: 1;
 
             .center {
                 flex-grow: 1;
@@ -113,11 +116,6 @@ onUnmounted(() => {
         }
 
     }
-
-    .footer {}
-
-
-
 
 }
 </style>

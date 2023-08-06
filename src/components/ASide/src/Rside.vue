@@ -4,19 +4,11 @@
         <a-table size="small" class="root" :pagination="false" bordered :data-source="dataSource" :columns="columns">
             <template #bodyCell="{ column, text, record }">
                 <template v-if="column.dataIndex === 'value' && record.editable">
-                    <div class="editable-cell">
-                        <div v-if="editableData[record.key]" class="editable-cell-input-wrapper">
-                            <a-input v-model:value="editableData[record.key].value" @pressEnter="save(record.key)" />
-                            <check-outlined class="editable-cell-icon-check" @click="save(record.key)" />
-                        </div>
-                        <div v-else class="editable-cell-text-wrapper">
-                            {{ text || ' ' }}
-                            <edit-outlined class="editable-cell-icon" @click="edit(record.key)" />
-                        </div>
-                    </div>
+                    <a-input @change="change($event, record)" :value="activeNode[record.key]" :placeholder="String(text)" />
+
                 </template>
                 <template v-else-if="column.dataIndex === 'key'">
-                    <label class="editable-cell-key">
+                    <label class="editable-cell-key ellipsis">
                         {{ record.key }}
                     </label>
                 </template>
@@ -25,10 +17,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { reactive, ref, watch, toRaw } from 'vue';
-import type { Ref, UnwrapRef } from 'vue';
-import { CheckOutlined, EditOutlined } from '@ant-design/icons-vue';
-import { cloneDeep } from 'lodash';
+import { reactive, ref, watch, toRaw, Ref } from 'vue';
 import useCommonStore from '@/store/common'
 import { storeToRefs } from 'pinia';
 import { DocNodeData } from '@/types';
@@ -37,7 +26,8 @@ const store = useCommonStore()
 interface DataItem {
     key: string;
     value: string;
-    editable?: boolean
+    editable?: boolean,
+    type?: string
 }
 
 const columns = [
@@ -54,34 +44,35 @@ const dataSource: Ref<DataItem[]> = ref([]);
 const { activeNode } = storeToRefs(store)
 watch(activeNode, function (newData) {
     dataSource.value.splice(0, dataSource.value.length)
-    const temp = toRaw<DocNodeData>(newData)
-    for (const key in temp) {
-        if (Object.prototype.hasOwnProperty.call(temp, key)) {
-            const value = temp[key as keyof DocNodeData]; // 使用索引类型查询语法
-            const objString = JSON.stringify(value, (_key, value) => {
-                if (typeof value === "function") {
-                    return value.toString(); // 将函数转换为字符串
-                }
-                return value; // 其他情况保持不变
-            });
-            dataSource.value.push({ key, value: objString })
-        }
-    }
+    const properties = toRaw<DocNodeData>(newData).properties
+    const customProperties = toRaw<DocNodeData>(newData).customProperties
+    properties.forEach((property) => {
+        dataSource.value.push({ key: property.label, value: newData[property.name], editable: property.editable })
+    })
+    customProperties?.forEach((property) => {
+        dataSource.value.push({ key: property.label, value: newData[property.name], editable: property.editable, type: property.type })
+    })
 })
+function change(event: Event, data: DataItem) {
+    console.log(data);
+    const target = event.target as HTMLInputElement
+    if (!target) return
+    if (target.type == 'file') {
+        if (!target.files) return
+        let file = target.files[0]
+        activeNode.value.file = file.name
+        activeNode.value.fileName = file.name
+        store.wavedata.file = file
+        return
+    }
+    activeNode.value[data.key] = target.value
 
 
-const editableData: UnwrapRef<Record<string, DataItem>> = reactive({});
+}
 
-const edit = (key: string) => {
-    editableData[key] = cloneDeep(dataSource.value.filter(item => key === item.key)[0]);
-};
-const save = (key: string) => {
-    Object.assign(dataSource.value.filter(item => key === item.key)[0], editableData[key]);
-    delete editableData[key];
-};
 let startX = 0
 const sideStyle = reactive({
-    width: "200px"
+    width: "300px"
 })
 
 const startDrag = (e: { clientX: number; }) => {
@@ -131,6 +122,12 @@ const stopDrag = () => {
 
     }
 
+    .ellipsis {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .editable-cell-key {
         height: 100%;
     }
@@ -155,11 +152,11 @@ const stopDrag = () => {
             right: 0;
             width: 20px;
             cursor: pointer;
+            color: #108ee9;
         }
 
         .editable-cell-icon {
             margin-top: 4px;
-            display: none;
         }
 
         .editable-cell-icon-check {

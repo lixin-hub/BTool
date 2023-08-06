@@ -1,4 +1,4 @@
-import { DocNodeData, Line, MenuNodeData, NodeType, StreamType } from '@/types';
+import { DocNodeData, Line, MenuNodeData, NodeType, Property, StreamType } from '@/types';
 import { cloneDeep } from 'lodash';
 import { defineStore } from 'pinia'
 import { UUID, openFileManager } from '@/util/util';
@@ -30,13 +30,35 @@ const defaultContextMenu = [
         }
     }
 ]
+//默认属性
+let defaultProperties: Property[] = [
+    { name: 'id', label: '节点ID' },
+    { name: 'label', label: '名称' },
+    { name: 'type', label: '节点类型' },
+    { name: 'maxInputNum', label: '最大输入' },
+    { name: 'inputType', label: '输入类型' },
+    { name: 'outputType', label: '输出类型' },
+    { name: 'x', label: 'x坐标' },
+    { name: 'y', label: 'y坐标' },
+    { name: 'playload', label: '节点负载' },
+]
+
 let inputDefault = {
+    id: 'id',
+    x: '0',
+    y: '0',
     type: NodeType.TYPE_INPUT,
     maxInputNum: 1,
     inputType: StreamType.NONE,
     outputType: StreamType.AUDIO,
+    ployload: null,
+    properties: defaultProperties,
+    fileName: UUID(4),
+    customProperties: [
+        { name: "fileName", label: '文件名称', editable: true }
+    ]
 }
-const children_1: Array<MenuNodeData> = [{
+const children_1: Array<DocNodeData> = [{
     key: "1-1",
     icon: '',
     label: "音频文件输入",
@@ -46,17 +68,23 @@ const children_1: Array<MenuNodeData> = [{
         let file = await openFileManager(".mp3")
         this.playload = file
         store.wavedata.file = file
+        this.fileName = file.name
+        this.file = file
+        store.activeNode.file = file
+        store.activeNode.fileName = file.name
     },
     exec: async function (playload: File): Promise<AudioBuffer> {
         let audioBuffeawait = await fileToAudioBuffer(playload || this.playload)
         console.log(audioBuffeawait);
         return audioBuffeawait;
-    }
+    },
+
 }, {
     key: "1-2",
     icon: '',
     label: "从视频输入",
-    ...inputDefault
+    ...inputDefault,
+
 }, {
     key: "1-3",
     icon: '',
@@ -70,12 +98,17 @@ const children_1: Array<MenuNodeData> = [{
     ...inputDefault
 }]
 let processDefault = {
+    id: 'id',
+    x: '0',
+    y: '0',
     type: NodeType.TYPE_AUDIO_PROCESS,
     inputType: StreamType.AUDIO,
     outputType: StreamType.AUDIO,
     maxInputNum: 1,
+    properties: defaultProperties,
+
 }
-const children_2: Array<MenuNodeData> = [
+const children_2: Array<DocNodeData> = [
     {
         key: "2-1",
         icon: '',
@@ -83,34 +116,61 @@ const children_2: Array<MenuNodeData> = [
         ...processDefault,
         start: 0,//起始
         end: 20,//结束
+        customProperties: [
+            { name: "start", label: '起始时间', editable: true },
+            { name: "end", label: '结束时间', editable: true }
+        ],
         exec: async function (playload: File | AudioBuffer, start: number, end: number): Promise<AudioBuffer> {
             this.playload = playload
             return (playload instanceof File) ? await trimAudioFromFile(playload, start || this.start, end || this.end) : trimAudioFromBuffer(playload, start || this.start, end || this.end)
-        }
+        },
     }, {
         key: "2-2",
         icon: '',
         label: "合并",
         ...processDefault,
-        maxInputNum: 2
+        maxInputNum: 2,
+        branch1: '',
+        branch2: '',
+        customProperties: [
+            { name: "branch1", label: '分支1' },
+            { name: "branch2", label: '分支2' },
+        ],
     }, {
         key: "2-3",
         icon: '',
         label: "淡入",
         ...processDefault,
+        start: 0,
+        end: 5,
+        customProperties: [
+            { name: "start", label: '开始时间', editable: true },
+            { name: "end", label: '结束时间', editable: true },
+        ],
     }, {
         key: "2-4",
         icon: '',
         label: "淡出",
         ...processDefault,
+        start: 0,
+        end: 5,
+        customProperties: [
+            { name: "start", label: '开始时间', editable: true },
+            { name: "end", label: '结束时间', editable: true },
+        ],
 
     },
 ]
 let transDefault = {
+    id: 'id',
+    x: '0',
+    y: '0',
     type: NodeType.TYPE_AUDIO_TRANS,
     inputType: StreamType.AUDIO,
     outputType: StreamType.AUDIO,
     maxInputNum: 1,
+    properties: defaultProperties
+
 }
 const children_3: Array<MenuNodeData> = [
 
@@ -180,10 +240,15 @@ const children_3: Array<MenuNodeData> = [
     },
 ]
 let aidDfault = {
+    id: 'id',
+    x: '0',
+    y: '0',
     type: NodeType.TYPE_AUDIO_PROCESS,
     inputType: StreamType.AUDIO,
     outputType: StreamType.AUDIO,
     maxInputNum: 1,
+    properties: defaultProperties
+
 }
 
 const children_4: Array<MenuNodeData> = [{
@@ -224,13 +289,22 @@ const children_4: Array<MenuNodeData> = [{
 },
 ]
 let outputDefault = {
+    id: 'id',
+    x: '0',
+    y: '0',
     type: NodeType.TYPE_OUTPUT,
     maxOutputNum: 0,
     maxInputNum: 1,
     inputType: StreamType.AUDIO,
-    outputType: StreamType.FILE
+    outputType: StreamType.FILE,
+    properties: defaultProperties,
+    fileName: null,
+    customProperties: [
+        { name: "fileName", label: '文件名称' },
+    ],
+
 }
-const children_5: Array<MenuNodeData> = [
+const children_5: Array<DocNodeData> = [
     {
         key: "5-1",
         icon: '',
@@ -269,7 +343,7 @@ let childrens = [children_1, children_2, children_3, children_4, children_5]
 //遍历menuItems，如果children没有定义inputNum，就设置为1,maxInputNum默认为inputNum，如果定义了就不改变
 childrens.forEach((children) => {
     children.forEach((c) => {
-        let child = c as MenuNodeData
+        let child = c as DocNodeData
         if (child.contextMenuItems) {
             child.contextMenuItems = [...child.contextMenuItems, ...cloneDeep(defaultContextMenu)]
         } else {
