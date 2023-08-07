@@ -22,6 +22,11 @@ export interface Line {
     from: string,
     to: string,
 }
+export enum NodeKey {
+    KEY_FILE_INPUT = "1-1",
+    KEY_PROCESS_CUT = "2-1",
+    KEY_OUT_PUT_FILE = "5-1",
+}
 // export interface ContextMenuItem{
 //     label: string,
 //     tips: string,
@@ -34,28 +39,28 @@ export type Property = {
     editable?: boolean,
     type?: string,
 }
-/**
- * 菜单栏节点
- */
-export interface MenuNodeData {
-    type: NodeType
+//基节点
+export interface BaseNode {
     key: string
-    label?: string,
-    icon?: string,
+    label: string,
+    icon: string,
     prop?: string,//描述
-    children?: Array<MenuNodeData>,
-
 }
-/** 
- *文档内部使用的节点数据结构
+
+/**
+ * 节点参数选项，主要作为初始化参数
  */
-export interface DocNodeData extends MenuNodeData {
-    id: string,//节点唔一id,//组件唯一id
-    x: string,//坐标
-    y: string,
-    style?: object,//自定义样式
+export interface NodeOptions {
+    id?: string,//节点唔一id,
+    type?: NodeType,
+    x?: string,//坐标
+    y?: string,
     maxInputNum?: number,//输入分支数
     maxOutputNum?: number,//输出分支数
+    prop?: string//描述
+    pre?: string[],//前驱结点
+    next?: string[],//后驱节点
+    style?: object,//自定义样式
     inputType?: StreamType,//输入
     outputType?: StreamType,//输出类型
     doubleClick?: (e: MouseEvent) => void,
@@ -63,12 +68,25 @@ export interface DocNodeData extends MenuNodeData {
     playload?: any,//结点保存的数据
     exec?: (playload?: any, ...params: any) => any,//执行函数,
     validate?: () => Promise<boolean> | boolean,//校驗函数
-    properties: Property[],//属性列表
+    properties?: Property[],//属性列表
     customProperties?: Property[],//自定义属性列表
     [key: string]: any // 允许添加未定义的属性
 }
-
-//pubsub
+/**
+ * 菜单栏节点
+ */
+export interface MenuNodeData extends BaseNode {
+    type?: NodeType
+    children?: Array<MenuNodeData>,
+}
+/** 
+ *文档内部使用的节点数据结构
+ */
+export type DocNodeData = BaseNode & {
+    id: string,//节点唔一id,//组件唯一id
+    x: string,//坐标
+    y: string,
+} & NodeOptions
 
 export enum Topics {
     NODE_ADD = "node_add",

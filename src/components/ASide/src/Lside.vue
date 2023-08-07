@@ -49,7 +49,7 @@ function onDragEnd(e: any) {
     let id: String = e.item.id;
     const arr = toRaw(items)
     let node = null;
-    //根据id找到节点
+    //根据id(key)找到节点
     for (let index = 0; index < arr.length; index++) {
         if (node) { break }
         const element = arr[index];

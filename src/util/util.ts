@@ -1,4 +1,9 @@
-import { DocNodeData, Line, MenuNodeData } from "@/types";
+import { DocNodeClass } from "@/functions/DocNodeClass";
+import { FileInputNode } from "@/functions/input/FileInputNode";
+import { FileOutNode } from "@/functions/output/FileOutPut";
+import { CutAudioNode } from "@/functions/process/CutAudioNode";
+import { ProcessNode } from "@/functions/process/ProcessNode";
+import { DocNodeData, Line, MenuNodeData, NodeKey, NodeOptions } from "@/types";
 import { message } from "ant-design-vue";
 import { throttle } from 'lodash';
 function uuid(len: number, radix: number): string {
@@ -249,4 +254,16 @@ export function hasSingleNode(lineList: Line[], nodeList: DocNodeData[]): DocNod
     }
 
     return singleNodes;
+}
+export function createNodeInstanceByKey(key: string, options: NodeOptions): DocNodeData {
+    if (key === NodeKey.KEY_FILE_INPUT) {
+        return new FileInputNode(options);
+    }
+    if (key === NodeKey.KEY_PROCESS_CUT) {
+        return new CutAudioNode(options);
+    } if (key === NodeKey.KEY_OUT_PUT_FILE) {
+        return new FileOutNode(options);
+    }
+    return new DocNodeClass(options)
+
 }

@@ -4,13 +4,16 @@
         <a-table size="small" class="root" :pagination="false" bordered :data-source="dataSource" :columns="columns">
             <template #bodyCell="{ column, text, record }">
                 <template v-if="column.dataIndex === 'value' && record.editable">
-                    <a-input @change="change($event, record)" :value="activeNode[record.key]" :placeholder="String(text)" />
+                    <a-input @change="change($event, record)" :value="showValue(record)" :placeholder="String(text)" />
 
                 </template>
                 <template v-else-if="column.dataIndex === 'key'">
                     <label class="editable-cell-key ellipsis">
-                        {{ record.key }}
+                        {{ record.label }}
                     </label>
+                </template>
+                <template v-else>
+                    {{ showValue(record) }}
                 </template>
             </template>
         </a-table>
@@ -24,8 +27,9 @@ import { DocNodeData } from '@/types';
 // import useMove from '@/util/useMove';
 const store = useCommonStore()
 interface DataItem {
-    key: string;
-    value: string;
+    label: string,
+    key: string,
+    value: string,
     editable?: boolean,
     type?: string
 }
@@ -42,19 +46,33 @@ const columns = [
 ];
 const dataSource: Ref<DataItem[]> = ref([]);
 const { activeNode } = storeToRefs(store)
+
+function showValue(record: DataItem) {
+    let value = activeNode.value[record.key]
+    if (value == null) {
+        return "NULL"
+    }
+    if (value == undefined) {
+        return "UNDEFINE"
+    }
+    if (value instanceof Array)
+        return value.join(',')
+    if (value instanceof File)
+        return value.name
+    return value
+}
 watch(activeNode, function (newData) {
     dataSource.value.splice(0, dataSource.value.length)
     const properties = toRaw<DocNodeData>(newData).properties
     const customProperties = toRaw<DocNodeData>(newData).customProperties
-    properties.forEach((property) => {
-        dataSource.value.push({ key: property.label, value: newData[property.name], editable: property.editable })
+    properties?.forEach((property) => {
+        dataSource.value.push({ key: property.name, value: newData[property.name], ...property })
     })
     customProperties?.forEach((property) => {
-        dataSource.value.push({ key: property.label, value: newData[property.name], editable: property.editable, type: property.type })
+        dataSource.value.push({ key: property.name, value: newData[property.name], ...property })
     })
 })
 function change(event: Event, data: DataItem) {
-    console.log(data);
     const target = event.target as HTMLInputElement
     if (!target) return
     if (target.type == 'file') {
@@ -66,8 +84,6 @@ function change(event: Event, data: DataItem) {
         return
     }
     activeNode.value[data.key] = target.value
-
-
 }
 
 let startX = 0

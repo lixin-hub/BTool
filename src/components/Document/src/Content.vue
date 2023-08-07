@@ -14,10 +14,10 @@ import { CustomMouseMenu } from '@howdyjs/mouse-menu';
 import { Ref, nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from "vue";
 import jsPlumbSetting from "@/util/jsPlumbSetting";
 import useCommonStore from '@/store/common'
-import { DocNodeData, Line, StreamType, Topics, ShortCut, NodeType } from "@/types";
-import { UUID, findDocNodeById, findDocNodeByKey, createMousePositionTracker, findCycle, findParentNode } from "@/util/util";
+import { DocNodeData, Line, StreamType, Topics, ShortCut, NodeType, NodeOptions } from "@/types";
+import { UUID, findDocNodeById, findDocNodeByKey, createMousePositionTracker, findCycle, findParentNode, createNodeInstanceByKey } from "@/util/util";
 import { DocNode } from "@/components/Node";
-import { Connection, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
+import { Connection, ConnectionMadeEventInfo, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
 import { message } from 'ant-design-vue';
 import { storeToRefs } from "pinia";
 import * as lodash from "lodash";
@@ -96,7 +96,7 @@ function init() {
                 message.success("删除失败")
             }
         });
-        // 连线
+        // 判断是否可以连线
         instance.bind("beforeDrop", (evt: OnConnectionBindInfo) => {
 
             let from: string = evt.connection.source.id
@@ -161,6 +161,20 @@ function init() {
                 return true
             }
         })
+        //节点连接成功
+        instance.bind("connection", (evt: ConnectionMadeEventInfo) => {
+            let sourceId: string = evt.sourceId
+            let targetId: string = evt.targetId
+            let source = findDocNodeById(nodeList, sourceId)
+            let target = findDocNodeById(nodeList, targetId)
+            //建立连接
+            if (source && target) {
+                console.log(nodeList);
+                target?.pre?.push(sourceId)
+                source?.next?.push(targetId)
+            }
+        })
+
     })
 }
 //添加结点
@@ -171,7 +185,6 @@ function addNode(docNode: DocNodeData) {
         instance.makeSource(docNode.id, jsPlumbSetting.sourceOptions)
         instance.makeTarget(docNode.id, jsPlumbSetting.targetOptions)
         instance.draggable(docNode.id)
-
     })
 }
 //删除节点
@@ -393,11 +406,12 @@ let unsubscribeAddNode = pubsub.subscribe(Topics.NODE_ADD, (_: any, data: { evt:
     let x = left - 100 + 'px'
     let y = top - 20 + 'px'
 
-    const docNode: DocNodeData = {
+    const options: NodeOptions = {
         ...node,
         id: UUID(),
         x, y,
     }
+    let docNode = createNodeInstanceByKey(node.key, options)
     addNode(docNode)
 })
 //复制粘贴
@@ -424,7 +438,6 @@ let unsubscribeCtrlC = pubsub.subscribe(ShortCut.KEY_CTRL_C, async () => {
 
 //粘贴
 let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
-
     let node: DocNodeData | null = null
     try {
         let text = await navigator.clipboard.readText()
