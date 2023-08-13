@@ -230,6 +230,7 @@ export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): 
             });
         }
     }
+    console.log(graph.nodes);
 
     // 步骤 8: 检查是否存在循环依赖
     const hasCycle = graph.nodes.some(node => node.inputs.length > 0);
@@ -256,7 +257,7 @@ export function hasSingleNode(lineList: Line[], nodeList: DocNodeData[]): DocNod
     return singleNodes;
 }
 export function createNodeInstanceByKey(key: string, options: NodeOptions): DocNodeData {
-    
+
     if (key === NodeKey.KEY_FILE_INPUT) {
         return new FileInputNode(options);
     }
@@ -266,5 +267,14 @@ export function createNodeInstanceByKey(key: string, options: NodeOptions): DocN
         return new FileOutNode(options);
     }
     return new DocNodeClass(options)
+}
+//获取上一个节点的数据
+export function getPreNodeData<T>(nodeList: Array<DocNodeData>, preNodeId?: string): T | undefined {
+    if (!preNodeId) {
+        return undefined
+    }
+    let preNode = findDocNodeById(nodeList, preNodeId)
+    let buffer = preNode?.outputPlayload
+    return buffer as T
 
 }

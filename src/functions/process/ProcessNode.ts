@@ -14,29 +14,22 @@ export class ProcessNode extends DocNodeClass {
             inputType: StreamType.AUDIO,
             outputType: StreamType.AUDIO,
             fileName: UUID(4),
-            contextMenuItems: [
+        }
+        )
+        this.contextMenuItems.unshift
+            (
                 {
-                    label: '执行',
+                    order: 1,
+                    label: '从头执行',
                     tips: 'exec',
                     fn: async () => {
-                        if (this.exec) {
-                            try {
-                                let r = await this.exec()
-                                this.outPutPlayload = r
-                                message.info("执行完成")
-                            } catch {
-                                message.error("执行失败")
-                            }
-                        }
+                        
                     }
                 },
 
 
-            ],
-        },
-            cloneDeep(data),
-        )
-    }
+            )
+}
 
 
 }

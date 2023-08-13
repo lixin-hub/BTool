@@ -10,7 +10,7 @@ export function trimAudioFromBuffer(audioBuffer: AudioBuffer, start: number, end
     var rate = audioBuffer.sampleRate;
 
     // 截取前3秒
-    var startOffset = start;
+    var startOffset =rate* start;
     var endOffset = rate * end;
     var frameCount = endOffset - startOffset;
     // 创建同样采用率、同样声道数量，长度是前3秒的空的AudioBuffer

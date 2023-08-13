@@ -1,10 +1,11 @@
 import { DocNodeData, StreamType, Property, NodeType, MenuNodeData, NodeOptions, ShortCut } from "@/types";
 import { MyWaveSurfer } from "@/types/MyWaveSurfer";
 import WaveSurferCache from "@/util/WaveSurferCache";
-import { UUID } from "@/util/util";
+import { UUID, getPreNodeData } from "@/util/util";
+import useCommonStore from '@/store/common';
 import { MenuSetting } from "@howdyjs/mouse-menu/dist/types";
-import { message } from "ant-design-vue";
-
+import { NotificationPlacement, message, notification } from "ant-design-vue";
+const store=useCommonStore()
 export class DocNodeClass implements DocNodeData {
     [key: string]: any
     id: string
@@ -14,8 +15,8 @@ export class DocNodeClass implements DocNodeData {
     label: string
     icon: string
     properties: Property[]
-    pre?: string[]
-    next?: string[]
+    pre: string[]
+    next: string[]
     style?: object
     maxInputNum?: number
     maxOutputNum?: number
@@ -25,7 +26,7 @@ export class DocNodeClass implements DocNodeData {
     inputType?: StreamType
     outputType?: StreamType
     contextMenuItems: MenuSetting[]
-    playload?: AudioBuffer
+    playload?: AudioBuffer|Blob
     customProperties?: Property[]
     prop?: string
     children?: MenuNodeData[]
@@ -48,7 +49,13 @@ export class DocNodeClass implements DocNodeData {
                 label: '执行',
                 tips: 'Exec',
                 fn: () => {
-                    this.exec()
+                    try {
+                        this.exec()
+                    } catch (error) {
+                        message.error(error+'')
+                        console.log(error);
+                        
+                    }
                 }
             },
             {
@@ -62,14 +69,14 @@ export class DocNodeClass implements DocNodeData {
             {
                 order: 3,
                 label: '复制',
-                tips: 'Open',
+                tips: 'Copy',
                 fn: () => {
                     PubSub.publish(ShortCut.KEY_CTRL_V, this.id)
                 }
             }, {
                 order: 4,
                 label: '粘贴',
-                tips: 'Open',
+                tips: 'paste',
                 fn: () => {
                     PubSub.publish(ShortCut.KEY_CTRL_C, this.id)
                 }
@@ -106,13 +113,16 @@ export class DocNodeClass implements DocNodeData {
     doubleClick(): void {
         throw new Error("Method not implemented.");
     }
-    activated(): void {
-        throw new Error("Method not implemented.");
+
+    activated() {
+        this.showWave()
     }
-    deActivated?(): void {
-        throw new Error("Method not implemented.");
-    }
-    exec() {
+ 
+ 
+     deActivated() {
+         this.hideWave()
+     }
+    exec(..._parms:any ) {
         throw new Error("Method not implemented.");
     }
     validate?(): boolean | Promise<boolean> {
@@ -130,5 +140,30 @@ export class DocNodeClass implements DocNodeData {
             return
         }
             this.getWs().loadBuffer(this.playload)
+    }
+    showWave(){
+        let wave: HTMLDivElement = document.getElementById("wave" +this.id) as HTMLDivElement
+        if(!wave) return
+           wave.style.display = "block"
+    }
+    hideWave() {
+        let wave: HTMLDivElement = document.getElementById("wave" + this.id) as HTMLDivElement
+        if(!wave) return
+        wave.style.display = "none"
+    }
+    getPreNode(): AudioBuffer | undefined {
+        let pre = this.pre[0];
+        if (!pre) return
+        let buffer = getPreNodeData<AudioBuffer>(store.nodeList, pre)
+        if (!buffer) {
+            notification.warn({
+                message: `无法执行该节点`,
+                description: "前一个节点无数据，请选择前一个节点执行或右键选择：'执行到此节点'",
+                duration: 3,
+                placement: 'bootomRight' as NotificationPlacement
+            });
+            return
+        }
+        return buffer
     }
 }

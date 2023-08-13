@@ -1,16 +1,13 @@
 import { NodeOptions, } from "@/types";
 import { ProcessNode } from "./ProcessNode";
+import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions' //导入时间轴插件
+import { trimAudioFromBuffer } from "@/util/AudioUtil";
+import { HightlightDecorators } from "@/decorators";
+import { watch } from "vue";
 import useCommonStore from '@/store/common';
-import RegionsPlugin from "wavesurfer.js/dist/plugins/regions";
-import { findDocNodeById } from "@/util/util";
-import { convertAudioBufferToBlob, trimAudioFromBuffer, trimAudioFromFile } from "@/util/AudioUtil";
-import WaveSurfer from "wavesurfer.js";
-import options from "@/util/WaveSurferOptions";
-import WaveSurferCache from "@/util/WaveSurferCache";
-
+import { message } from "ant-design-vue";
 const store = useCommonStore()
 export class CutAudioNode extends ProcessNode {
-    private isActive = false;
     start: number = 0;
     end: number = 20;
     constructor(data: NodeOptions) {
@@ -22,53 +19,80 @@ export class CutAudioNode extends ProcessNode {
             { name: "end", label: '结束时间', editable: true }
         ]
     }
-    doubleClick = () => {
-        console.log(this);
+    //双击时默认打开选取
+    async doubleClick() {
+        this.inputPlayload = this.getPreNode()
+        if (!this.inputPlayload) return
+        let ws = this.getWs().ws
+        let plugins = ws.getActivePlugins()
+        //看是否存在已经注册的插件
+        let wsRegions: RegionsPlugin | undefined = plugins.find(item => item instanceof RegionsPlugin) as RegionsPlugin
+        if (wsRegions) {
+            wsRegions.clearRegions()
+            wsRegions.addRegion({
+                start: this.start,
+                end: this.end,
+                drag: true,
+                resize: true,
+                color: 'rgba(145, 252, 74,0.5)',
+            })
+        } else {
+            wsRegions = ws.registerPlugin(RegionsPlugin.create())
+            wsRegions.on('region-updated', (region) => {
+                console.log('Updated region', region)
+                this.start = Number.parseFloat(Number(region.start).toFixed(3))
+                this.end = Number.parseFloat(Number(region.end).toFixed(3))
+            })
+            wsRegions.addRegion({
+                start: this.start,
+                end: this.end,
+                drag: true,
+                resize: true,
+                color: 'rgba(145, 252, 74,0.5)',
+            })
+
+            wsRegions.on('region-clicked', (region, e) => {
+                e.stopPropagation() // prevent triggering a click on the waveform
+                // activeRegion = region
+                region.play()
+                region.setOptions({ color: "rgba(145, 252, 74,0.5)" })
+            })
+            watch(store.activeNode, () => {
+                wsRegions?.clearRegions()
+                wsRegions?.addRegion({
+                    start: this.start,
+                    end: this.end,
+                    drag: true,
+                    resize: true,
+                    color: 'rgba(145, 252, 74,0.5)',
+                })
+
+            }, { deep: true })
+        }
+        this.getWs().loadBuffer(this.inputPlayload)
+    }
+
+    @HightlightDecorators()
+    async exec(playload?: AudioBuffer, start?: number, end?: number): Promise<AudioBuffer | undefined> {
+        this.inputPlayload = playload || this.getPreNode()
+        if (!this.inputPlayload) {
+            message.error("节点无输入")
+            return
+        }
+        return new Promise(async (resolve) => {
+            let audioBuffer = trimAudioFromBuffer(this.inputPlayload, start || this.start, end || this.end)
+            let plugins = this.getWs().ws.getActivePlugins()
+            let wsRegions: RegionsPlugin | undefined = plugins.find(item => item instanceof RegionsPlugin) as RegionsPlugin
+            if (wsRegions) {
+                wsRegions.clearRegions()
+            }
+            await this.getWs().loadBuffer(audioBuffer)
+            this.playload = audioBuffer
+            this.outputPlayload = audioBuffer
+            resolve(audioBuffer)
+        })
 
     }
-    deActivated = () => {
-        this.isActive = false
-    }
-    activated = async () => {
-        // this.isActive = true;
-        // let playload;
-        // if (this.pre) {
-        //     let preNodeId = this.pre[0]
-        //     let node = findDocNodeById(store.nodeList, preNodeId)
-        //     playload = node?.outputPlayload
-        //     if (!playload) return
-        // }
-        // let result = await this.exec(playload, this.start, this.end)
-        // if (!result || !this.isActive) return
-        // store.waveSurfer?.destroy()
-        // let ws = WaveSurferCache.createWaveSurfer()
-        // store.waveSurfer=ws
-        // const wsRegions = ws.registerPlugin(RegionsPlugin.create())
-        
-        // wsRegions.on('region-updated', (region) => {
-        //     console.log('Updated region', region)
-        // })
-        // wsRegions.addRegion({
-        //     start: this.start,
-        //     end: this.end,
-        //     color: 'rgba(145, 252, 74,0.5)',
-        // })
 
-        // wsRegions.on('region-clicked', (region, e) => {
-        //     e.stopPropagation() // prevent triggering a click on the waveform
-        //     // activeRegion = region
-        //     region.play()
-        //     region.setOptions({ color: "rgba(145, 252, 74,0.5)" })
-        // })
-        // let blob = await convertAudioBufferToBlob(result)
-        // if (!blob && !this.isActive) return
-        // ws.loadBlob(blob)
-    }
-    exec = async (playload?: File | AudioBuffer, start?: number, end?: number): Promise<AudioBuffer> => {
 
-        this.inputPlayload = playload
-        return (playload instanceof File) ?
-            await trimAudioFromFile(this.inputPlayload, start || this.start, end || this.end) :
-            trimAudioFromBuffer(this.inputPlayload, start || this.start, end || this.end)
-    }
 }

@@ -15,13 +15,7 @@ export class MyWaveSurfer {
     constructor(ws: WaveSurfer) {
         this.ws = ws
     }
-    show() {
-        this.ws.getWrapper().style.display = "block"
-    }
-    hide() {
-        console.log("hide");
-        this.ws.getWrapper().style.display = "none"
-    }
+   
     async loadFile(file: File): Promise<void> {
         try {
             let buffer = await fileToAudioBuffer(file)
@@ -32,7 +26,7 @@ export class MyWaveSurfer {
     }
     async loadBuffer(buffer: AudioBuffer): Promise<void> {
         try {
-            this.ws.loadBlob(await convertAudioBufferToBlob(buffer))
+           await this.ws.loadBlob(await convertAudioBufferToBlob(buffer))
         } catch (error) {
             console.log(error);
             message.error("文件转换出错")

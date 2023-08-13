@@ -49,7 +49,6 @@ export class InputNode extends DocNodeClass {
         this.file = file
         this.exec()
     }
-    // @HightlightDecorators(this.id,"")
     @HightlightDecorators()
     async exec(file?: File): Promise<AudioBuffer | void> {
         file = file || this.inputPlayload
@@ -66,23 +65,10 @@ export class InputNode extends DocNodeClass {
         }
         this.outputPlayload = audioBuffer
         this.playload = audioBuffer
+       await this.getWs().loadBuffer(audioBuffer)
         //  this.activated()
         return audioBuffer;
     }
-    async activated() {
-        let wave: HTMLDivElement = document.getElementById("wave" + this.id) as HTMLDivElement
-        if(!wave) return
-        wave.style.display = "block"
-        // document.querySelector("#")
-    }
-
-
-    deActivated() {
-        let wave: HTMLDivElement = document.getElementById("wave" + this.id) as HTMLDivElement
-        if(!wave) return
-        // this.getWs().hide();
-        wave.style.display = "none"
-
-    }
+   
 
 }
