@@ -1,1 +1,1 @@
-export { default as HightlightDecorators } from './src/HeightlightDecorators';
+export { default as HightlightDecorators } from './src/HightlightDecorators';

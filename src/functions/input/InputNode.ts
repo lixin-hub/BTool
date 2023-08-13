@@ -1,14 +1,14 @@
 import useStore from "@/store/common";
-import { convertAudioBufferToBlob, fileToAudioBuffer } from "@/util/AudioUtil";
+import { fileToAudioBuffer } from "@/util/AudioUtil";
 import { UUID, openFileManager } from "@/util/util";
-import { cloneDeep, merge } from "lodash";
+import { merge } from "lodash";
 import { DocNodeClass } from "../DocNodeClass";
-import { NodeOptions, NodeType, ShortCut, StreamType } from "@/types";
+import { NodeOptions, NodeType, StreamType } from "@/types";
 import { message } from "ant-design-vue";
-import useCommonStore from '@/store/common';
+
 import WaveSurferCache from "@/util/WaveSurferCache";
 import { MenuSetting } from "@howdyjs/mouse-menu/dist/types";
-const store = useCommonStore()
+import { HightlightDecorators } from "@/decorators";
 
 export class InputNode extends DocNodeClass {
     constructor(data: NodeOptions) {
@@ -49,7 +49,8 @@ export class InputNode extends DocNodeClass {
         this.file = file
         this.exec()
     }
-    // @HightlightDecorators
+    // @HightlightDecorators(this.id,"")
+    @HightlightDecorators()
     async exec(file?: File): Promise<AudioBuffer | void> {
         file = file || this.inputPlayload
         if (!file) {
@@ -85,4 +86,3 @@ export class InputNode extends DocNodeClass {
     }
 
 }
-

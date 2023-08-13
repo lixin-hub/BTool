@@ -80,4 +80,8 @@ function changePostion(_e: MouseEvent) {
     background-color: rgb(48, 131, 255);
     color: white
 }
+.run {
+    background-color: rgb(255, 96, 48);
+    color: white
+}
 </style>
