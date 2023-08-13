@@ -7,7 +7,7 @@ export class OutPutNode extends DocNodeClass {
     constructor(data: NodeOptions) {
         super(data);
         //合并选项与自定义选项
-        merge(this, cloneDeep(data), {
+        merge(this, {
             type: NodeType.TYPE_OUTPUT,
             maxInputNum: 1,
             inputType: StreamType.AUDIO,
@@ -16,8 +16,7 @@ export class OutPutNode extends DocNodeClass {
             customProperties: Array<Property>(
                 { name: "fileName", label: "文件名", editable: true }
             )
-        })
+        }, cloneDeep(data),)
     }
-
 
 }

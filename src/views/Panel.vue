@@ -26,10 +26,8 @@
             <a-layout-content class="content">
                 <a-layout class="center">
                     <Documention></Documention>
-                    <Rside></Rside>
                 </a-layout>
                 <a-layout class="footer">
-                    <Wave></Wave>
                 </a-layout>
             </a-layout-content>
         </div>
@@ -38,8 +36,6 @@
 </template>
 <script lang="ts" setup>
 import { Documention } from '@/components/Document'
-import { Lside, Rside } from '@/components/ASide'
-import { Wave } from '@/components/Footer'
 // import { Header } from '@/components/Header'
 import { onMounted, onUnmounted } from 'vue';
 import pubsub from "pubsub-js";
@@ -103,11 +99,6 @@ onUnmounted(() => {
             flex-grow: 1;
             flex-shrink: 1;
 
-            .center {
-                flex-grow: 1;
-                flex-direction: row;
-                display: flex;
-            }
 
             .footer {
                 flex-shrink: 0;

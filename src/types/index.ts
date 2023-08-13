@@ -1,4 +1,5 @@
 import { MenuSetting } from "@howdyjs/mouse-menu/dist/types"
+import { MyWaveSurfer } from "./MyWaveSurfer"
 
 
 export enum StreamType {
@@ -63,14 +64,19 @@ export interface NodeOptions {
     style?: object,//自定义样式
     inputType?: StreamType,//输入
     outputType?: StreamType,//输出类型
-    doubleClick?: (e: MouseEvent) => void,
+    inputPlayload?: any,
+    outputPlayload?: any,
     contextMenuItems?: MenuSetting[]//上下文菜单项,
     playload?: any,//结点保存的数据
-    exec?: (playload?: any, ...params: any) => any,//执行函数,
-    validate?: () => Promise<boolean> | boolean,//校驗函数
     properties?: Property[],//属性列表
     customProperties?: Property[],//自定义属性列表
     [key: string]: any // 允许添加未定义的属性
+    getWs():MyWaveSurfer,//渲染对象
+    doubleClick?(e: MouseEvent):void,
+    activated?(): void,//激活
+    deActivated?(): void,//失活
+    exec? (playload?: any, ...params: any): any,//执行函数,
+    validate?() :Promise<boolean> | boolean,//校驗函数
 }
 /**
  * 菜单栏节点
@@ -86,6 +92,14 @@ export type DocNodeData = BaseNode & {
     id: string,//节点唔一id,//组件唯一id
     x: string,//坐标
     y: string,
+    getWs():MyWaveSurfer,//渲染对象
+    doubleClick(e: MouseEvent):void,
+    activated?(): void,//激活
+    deActivated?(): void,//失活
+    exec (playload?: any, ...params: any): any,//执行函数,对数据进行处理
+    preview (): any,//预览函数,对数据进行预览，如示波器
+    validate?() :Promise<boolean> | boolean,//校驗函数
+    destory():void,//销
 } & NodeOptions
 
 export enum Topics {

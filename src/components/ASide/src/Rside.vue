@@ -71,7 +71,7 @@ watch(activeNode, function (newData) {
     customProperties?.forEach((property) => {
         dataSource.value.push({ key: property.name, value: newData[property.name], ...property })
     })
-})
+},{deep:true})
 function change(event: Event, data: DataItem) {
     const target = event.target as HTMLInputElement
     if (!target) return

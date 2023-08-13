@@ -1,37 +1,39 @@
-import { DocNodeData, StreamType, Property, NodeType, MenuNodeData, NodeOptions } from "@/types";
+import { DocNodeData, StreamType, Property, NodeType, MenuNodeData, NodeOptions, ShortCut } from "@/types";
+import { MyWaveSurfer } from "@/types/MyWaveSurfer";
+import WaveSurferCache from "@/util/WaveSurferCache";
 import { UUID } from "@/util/util";
 import { MenuSetting } from "@howdyjs/mouse-menu/dist/types";
+import { message } from "ant-design-vue";
 
 export class DocNodeClass implements DocNodeData {
     [key: string]: any
     id: string
     x: string
     y: string
+    key: string
+    label: string
+    icon: string
+    properties: Property[]
     pre?: string[]
     next?: string[]
     style?: object
     maxInputNum?: number
     maxOutputNum?: number
+    type?: NodeType
+    outputPlayload?: any;
+    inputPlayload?: any;
     inputType?: StreamType
     outputType?: StreamType
-    doubleClick?: ((e: MouseEvent) => void)
-    contextMenuItems?: MenuSetting[]
-    playload?: any
-    exec?: ((playload?: any, ...params: any) => any)
-    validate?: (() => boolean | Promise<boolean>)
-    properties: Property[]
+    contextMenuItems: MenuSetting[]
+    playload?: AudioBuffer
     customProperties?: Property[]
-    type?: NodeType
-    key: string
-    label: string
-    icon: string
     prop?: string
     children?: MenuNodeData[]
     constructor(data: NodeOptions) {
         this.key = data.key || '';
         this.id = data.id || UUID()
-        this.x = data.x || '0'
         this.y = data.y || '0';
+        this.x = data.x || '0'
         this.pre = data.pre || [];
         this.next = data.next || [];
         this.style = data.style || {};
@@ -40,34 +42,49 @@ export class DocNodeClass implements DocNodeData {
         this.label = data.label || '';
         this.icon = data.icon || '';
         this.prop = data.prop || '';
-        this.contextMenuItems = data.contextMenuItems || [
+        this.contextMenuItems = [
             {
-
+                order: 1,
+                label: '执行',
+                tips: 'Exec',
+                fn: () => {
+                    this.exec()
+                }
+            },
+            {
+                order: 2,
+                label: '打开波形图',
+                tips: 'preview',
+                fn: () => {
+                    this.preview()
+                }
+            },
+            {
+                order: 3,
                 label: '复制',
                 tips: 'Open',
                 fn: () => {
+                    PubSub.publish(ShortCut.KEY_CTRL_V, this.id)
                 }
-            },
-            {
-                label: '查看',
-                tips: 'Edit',
+            }, {
+                order: 4,
+                label: '粘贴',
+                tips: 'Open',
                 fn: () => {
+                    PubSub.publish(ShortCut.KEY_CTRL_C, this.id)
                 }
             },
+          
             {
+                order: 5,
                 label: '删除',
                 tips: 'Delete',
                 fn: () => {
-                }
-            },
-            {
-                label: '重命名',
-                tips: 'Rename',
-                fn: () => {
+                    PubSub.publish(ShortCut.KEY_DELETE, this.id)
+                    this.destory()
                 }
             }
         ];
-        this.payload = data.playload || {};
         this.properties = data.properties || [
             { name: 'id', label: '节点ID' },
             { name: 'label', label: '名称' },
@@ -81,6 +98,37 @@ export class DocNodeClass implements DocNodeData {
             { name: 'pre', label: '前驱' },
             { name: 'next', label: '后驱' },
         ];
-    }
 
+    }
+    destory(): void {
+        WaveSurferCache.remove(this.id)
+    }
+    doubleClick(): void {
+        throw new Error("Method not implemented.");
+    }
+    activated(): void {
+        throw new Error("Method not implemented.");
+    }
+    deActivated?(): void {
+        throw new Error("Method not implemented.");
+    }
+    exec() {
+        throw new Error("Method not implemented.");
+    }
+    validate?(): boolean | Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    getWs(): MyWaveSurfer {
+        return WaveSurferCache.getWaveSurferByNode(this)
+    }
+    preview() {
+        if (!(this.playload instanceof AudioBuffer)){
+            message.error("当前节点没有数据，选择文件然后右键执行")
+            return
+        }
+        if (this.getWs().ws.isPlaying()) {
+            return
+        }
+            this.getWs().loadBuffer(this.playload)
+    }
 }

@@ -15,7 +15,7 @@ import { Ref, nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } fr
 import jsPlumbSetting from "@/util/jsPlumbSetting";
 import useCommonStore from '@/store/common'
 import { DocNodeData, Line, StreamType, Topics, ShortCut, NodeType, NodeOptions } from "@/types";
-import { UUID, findDocNodeById, findDocNodeByKey, createMousePositionTracker, findCycle, findParentNode, createNodeInstanceByKey } from "@/util/util";
+import { UUID, findDocNodeById, createMousePositionTracker, findCycle, findParentNode, createNodeInstanceByKey } from "@/util/util";
 import { DocNode } from "@/components/Node";
 import { Connection, ConnectionMadeEventInfo, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
 import { message } from 'ant-design-vue';
@@ -29,10 +29,8 @@ let localNodes, localLines;
 if (localNodesStr) {
     localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
     localNodes.forEach((node) => {
-        node.doubleClick = findDocNodeByKey(commonStore.menuItems, node.key)?.doubleClick
-        node.exec = findDocNodeByKey(commonStore.menuItems, node.key)?.exec
+        commonStore.nodeList.push(createNodeInstanceByKey(node.key, node))
     })
-    commonStore.nodeList = localNodes
 }
 if (localLineStr) {
     localLines = JSON.parse(localLineStr) as Array<Line>
@@ -238,11 +236,10 @@ function hashOppositeLine(from: string, to: string): boolean {
     return hasLine(to, from)
 }
 function onNodeClick(node: DocNodeData) {
-    deHightLihtNode(activeNode.value.id, "active")
-    activeNode.value = node
-    hightLihtNode(node.id, 0, "active")
+    activatedNode(node)
 }
 function mouseLeave() {
+
 }
 //上下文菜单
 const showMenu = (event: MouseEvent) => {
@@ -251,36 +248,10 @@ const showMenu = (event: MouseEvent) => {
     if (!node) return
     let an = findDocNodeById(nodeList, node.id)
     if (!an) return
-    activeNode.value = an
+    activatedNode(an)
     const MouseMenuCtx = CustomMouseMenu({
         el: document.getElementById((event?.target as HTMLElement).id || activeNode.value.id) as HTMLElement,
-        menuList: [
-            {
-                label: '打开',
-                tips: 'Open',
-                fn: () => {
-                }
-            },
-            {
-                label: '编辑',
-                tips: 'Edit',
-                fn: () => {
-                }
-            },
-            {
-                label: '删除',
-                tips: 'Delete',
-                fn: () => {
-                    deleteNode(node?.id || activeNode.value.id)
-                }
-            },
-            {
-                label: '重命名',
-                tips: 'Rename',
-                fn: () => {
-                }
-            }
-        ]
+        menuList: activeNode.value.contextMenuItems || []
         // Other Options
     })
     const { x, y } = event;
@@ -357,11 +328,26 @@ function hightLihtNode(ids: string | DocNodeData[], ms?: number, type?: string) 
             }, ms || 4000)
     })
 }
+
 //取消高亮指定节点
 function deHightLihtNode(id: string, type?: string) {
     let el: HTMLElement | null = document.getElementById(id)
     if (!el) return
     el.classList.remove(type || 'error');
+}
+function activatedNode(node: DocNodeData) {
+    if (node.id === activeNode.value.id) return
+    deActivatedNode(activeNode.value)
+    deHightLihtNode(activeNode.value.id, "active")
+    activeNode.value = node
+    hightLihtNode(node.id, 0, "active")
+    if (node.activated)
+        node.activated()
+}
+function deActivatedNode(node: DocNodeData) {
+    if (node.deActivated) {
+        node.deActivated()
+    }
 }
 //监听结点变化
 watch(nodeList, (newData) => {
@@ -418,7 +404,7 @@ let unsubscribeAddNode = pubsub.subscribe(Topics.NODE_ADD, (_: any, data: { evt:
 let unsubscribeCtrlD = pubsub.subscribe(ShortCut.KEY_CTRL_D, () => {
     let clone = lodash.cloneDeep(toRaw(activeNode.value))
     let docNode = { ...clone, y: Number.parseInt(clone.y) + 60 + 'px', id: UUID() }
-    addNode(docNode)
+    addNode(createNodeInstanceByKey(docNode.key, docNode))
     hightLihtNode(docNode.id, 1000, 'info')
 })
 
@@ -438,18 +424,7 @@ let unsubscribeCtrlC = pubsub.subscribe(ShortCut.KEY_CTRL_C, async () => {
 
 //粘贴
 let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
-    let node: DocNodeData | null = null
-    try {
-        let text = await navigator.clipboard.readText()
-        if (!text) return
-        node = JSON.parse(text)
-        if (!node) return
-        node.doubleClick = findDocNodeByKey(commonStore.menuItems, node.key)?.doubleClick
-        node.exec = findDocNodeByKey(commonStore.menuItems, node.key)?.exec
-    } catch {
-
-    }
-    let temp = node || psateData
+    let temp = psateData
     if (!temp)
         return
     const currentPosition = mouseTracker.getMousePosition();
@@ -464,6 +439,8 @@ let unsubscribeCtrlV = pubsub.subscribe(ShortCut.KEY_CTRL_V, async () => {
         ...temp, x: left + 'px',
         y: top + 'px', id: UUID()
     }
+
+    docNode = createNodeInstanceByKey(docNode?.key, docNode)
     addNode(docNode)
     hightLihtNode(docNode.id, 1000, 'info')
     message.success("粘贴成功")

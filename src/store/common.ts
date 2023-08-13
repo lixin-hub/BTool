@@ -1,5 +1,6 @@
 import { DocNodeData, Line, MenuNodeData, NodeKey } from '@/types';
 import { defineStore } from 'pinia'
+import WaveSurfer from 'wavesurfer.js';
 
 const menuItems: Array<MenuNodeData> = [
     {
@@ -179,8 +180,11 @@ const useStore = defineStore('common', {
             activeNode: {} as DocNodeData,
             activeLine: {} as Line,
             wavedata: {//示波器数据
-                file: {} as Blob
+                file: {} as Blob,
+                cache:new Map<Blob,Array<Number>>()
             },
+        
+            waveSurfer: {} as WaveSurfer,
             sortedNodeList: Array<DocNodeData>(),
         }
     },

@@ -256,6 +256,7 @@ export function hasSingleNode(lineList: Line[], nodeList: DocNodeData[]): DocNod
     return singleNodes;
 }
 export function createNodeInstanceByKey(key: string, options: NodeOptions): DocNodeData {
+    
     if (key === NodeKey.KEY_FILE_INPUT) {
         return new FileInputNode(options);
     }
