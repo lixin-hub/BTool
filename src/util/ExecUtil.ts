@@ -4,9 +4,11 @@ import { NodeType, Topics } from '@/types';
 import useCommonStore from '@/store/common';
 import { NotificationPlacement, message } from 'ant-design-vue';
 import { notification } from 'ant-design-vue';
+import { MyWaveSurfer } from '@/types/MyWaveSurfer';
 const store = useCommonStore()
 //从头执行
-export  async function execFromRoot(endId?:string) {
+export async function execFromRoot(endId?: string) {
+    MyWaveSurfer.alowLoading = false
     //校验
     if (!validation()) {
         return
@@ -26,19 +28,33 @@ export  async function execFromRoot(endId?:string) {
         let node = sortedNode[i]
         if (node.exec) {
             try {
-                pubsub.publish(Topics.HIGHT_LIGHT_NODES, { ids: node.id, ms: 0, type: "info" })
                 playload = await node.exec(playload)
-                pubsub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: node.id, type: "info" })
-                console.log("exec", node.label, playload);
+                if (!playload) {
+                    notification.error({
+                        message: `执行节点：${node.id} 时发生错误`,
+                        description: "请检查数据输入或刷新重试！",
+                        duration: 4,
+                        placement: 'bootomRight' as NotificationPlacement
+                    });
+                    MyWaveSurfer.alowLoading = true                    
+                    return
+                }
             } catch {
-                pubsub.publish(Topics.HIGHT_LIGHT_NODES, { ids: node.id, ms: 5000, type: "error" })
-                pubsub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: node.id, type: "info" })
-                message.error("发生错误")
+                notification.error({
+                    message: `执行节点：${node.id} 时发生错误`,
+                    description: "请检查数据输入或刷新重试！",
+                    duration: 4,
+                    placement: 'bootomRight' as NotificationPlacement
+                });
+                MyWaveSurfer.alowLoading = true
                 return
             }
         }
+        if (node.id === endId) {
+            break
+        }
     }
-
+    MyWaveSurfer.alowLoading = true
     pubsub.publish(Topics.EXEC_FLOW, sortedNode)
 }
 

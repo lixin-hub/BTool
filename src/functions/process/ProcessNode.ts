@@ -3,6 +3,7 @@ import { UUID } from "@/util/util";
 import { merge, cloneDeep } from "lodash";
 import { DocNodeClass } from "../DocNodeClass";
 import { message } from "ant-design-vue";
+import { execFromRoot } from "@/util/ExecUtil";
 
 export class ProcessNode extends DocNodeClass {
     constructor(data: NodeOptions) {
@@ -20,10 +21,10 @@ export class ProcessNode extends DocNodeClass {
             (
                 {
                     order: 1,
-                    label: '从头执行',
+                    label: '从头执行到此节点',
                     tips: 'exec',
                     fn: async () => {
-                        
+                        execFromRoot(this.id)
                     }
                 },
 

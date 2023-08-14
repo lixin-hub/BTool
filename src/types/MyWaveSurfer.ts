@@ -4,7 +4,14 @@ import { message } from "ant-design-vue";
 import WaveSurfer from "wavesurfer.js";
 
 export class MyWaveSurfer {
-   
+    // 是否允许加载，在全局执行的时候不加载波形
+    private static _alowLoading = true;
+    public static get alowLoading() {
+        return MyWaveSurfer._alowLoading;
+    }
+    public static set alowLoading(value) {
+        MyWaveSurfer._alowLoading = value;
+    }
     pause() {
         this.ws.pause()
     }
@@ -15,7 +22,7 @@ export class MyWaveSurfer {
     constructor(ws: WaveSurfer) {
         this.ws = ws
     }
-   
+
     async loadFile(file: File): Promise<void> {
         try {
             let buffer = await fileToAudioBuffer(file)
@@ -25,12 +32,15 @@ export class MyWaveSurfer {
         }
     }
     async loadBuffer(buffer: AudioBuffer): Promise<void> {
-        try {
-           await this.ws.loadBlob(await convertAudioBufferToBlob(buffer))
-        } catch (error) {
-            console.log(error);
-            message.error("文件转换出错")
+        if (!MyWaveSurfer.alowLoading){
+            return
         }
+            try {
+                await this.ws.loadBlob(await convertAudioBufferToBlob(buffer))
+            } catch (error) {
+                console.log(error);
+                message.error("文件转换出错")
+            }
     }
     destroy(id?: string): void {
         this.ws.destroy()

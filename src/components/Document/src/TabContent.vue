@@ -20,9 +20,7 @@ import { h } from 'vue';
 import pubsub from 'pubsub-js'
 import { DeleteOutlined } from '@ant-design/icons-vue';
 import { Topics } from '@/types';
-import useCommonStore from '@/store/common';
 import {  execFromRoot } from '@/util/ExecUtil';
-const store = useCommonStore()
 //清空画布
 function clearAllNodes() {
     pubsub.publish(Topics.CLEAR_ALL_NODES)

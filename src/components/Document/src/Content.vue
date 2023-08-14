@@ -2,8 +2,7 @@
     <div ref="root" class="container" id="efContainer">
         <template v-for="node in nodeList" :key="node.key">
             <DocNode @dblclick="doubleClick" @click.right.prevent="showMenu" @changePostion="changePostion"
-                :node-data="node" :id="node.id" @click="onNodeClick(node)" @mouseenter="onNodeClick(node)"
-                @mouseleave="mouseLeave">
+                :node-data="node" :id="node.id" @click="onNodeClick(node)">
             </DocNode>
         </template>
     </div>
@@ -22,21 +21,7 @@ import { message } from 'ant-design-vue';
 import { storeToRefs } from "pinia";
 import * as lodash from "lodash";
 const commonStore = useCommonStore()
-let localNodesStr = localStorage.getItem("nodeList")
-let localLineStr = localStorage.getItem("lineList")
-
-let localNodes, localLines;
-if (localNodesStr) {
-    localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
-    localNodes.forEach((node) => {
-        commonStore.nodeList.push(createNodeInstanceByKey(node.key, node))
-    })
-}
-if (localLineStr) {
-    localLines = JSON.parse(localLineStr) as Array<Line>
-    commonStore.lineList = localLines
-
-}
+initLocalData()
 const nodeList: Array<DocNodeData> = reactive(commonStore.nodeList || [])
 const lineList: Array<Line> = reactive(commonStore.lineList || [])
 const root: Ref<HTMLDivElement | null> = ref(null)
@@ -57,7 +42,29 @@ onMounted(() => {
 })
 const { activeNode } = storeToRefs(commonStore)
 let psateData: DocNodeData | null
-
+//初始化本地数据
+function initLocalData() {
+    
+    let localNodesStr = localStorage.getItem("nodeList")
+    let localLineStr = localStorage.getItem("lineList")
+    
+    let localNodes, localLines;
+    if (localNodesStr) {
+        localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
+        // 根据id去重
+        localNodes = lodash.uniqBy(localNodes, "id")
+        localNodes.forEach((node) => {
+            commonStore.nodeList.push(createNodeInstanceByKey(node.key, node))
+        })
+    }
+    if (localLineStr) {
+        localLines = JSON.parse(localLineStr) as Array<Line>
+        //根据每一项去重
+        lodash.uniqWith(localLines, lodash.isEqual)
+        commonStore.lineList = localLines
+    
+    }
+}
 function init() {
     instance.ready(() => {
         // 导入默认配置
@@ -237,9 +244,6 @@ function hashOppositeLine(from: string, to: string): boolean {
 }
 function onNodeClick(node: DocNodeData) {
     activatedNode(node)
-}
-function mouseLeave() {
-
 }
 //上下文菜单
 const showMenu = (event: MouseEvent) => {

@@ -6,10 +6,10 @@ export default function HightlightDecorators() {
         const originalMethod = descriptor.value;
         descriptor.value = async function (...args: any[]) {
             let that = this as DocNodeData
-            if(!that) return originalMethod.apply(this, args);
+            if (!that) return originalMethod.apply(this, args);
             try {
-             notification.open({
-                key: that.id,
+                notification.open({
+                    key: that.id,
                     message: `节点：${that.id} 正在运行`,
                     duration: 0,
                     placement: 'bootomRight' as NotificationPlacement
@@ -19,6 +19,9 @@ export default function HightlightDecorators() {
 
                 // 执行原始方法
                 const playload = await originalMethod.apply(this, args);
+                if (!playload) {
+                    PubSub.publish(Topics.HIGHT_LIGHT_NODES, { ids: that.id, ms: 3000, type: "error" });
+                }
                 notification.close(that.id)
                 // 取消高亮节点
                 PubSub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: that.id, type: "run" });

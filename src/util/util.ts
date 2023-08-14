@@ -171,6 +171,8 @@ export interface GraphNode {
 }
 //拓扑排序
 export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): DocNodeData[] {
+   console.log(nodeList);
+   
     const graph: { nodes: GraphNode[]; edges: Line[] } = {
         nodes: [],
         edges: []

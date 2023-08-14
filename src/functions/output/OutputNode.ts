@@ -19,6 +19,7 @@ export class OutPutNode extends DocNodeClass {
                 { name: "fileName", label: "文件名", editable: true }
             )
         })
+        this.contextMenuItems =  this.contextMenuItems.filter((item)=>item.tips!=="preview")
     }
     @HightlightDecorators()
     async exec(playload: AudioBuffer, name: string){
