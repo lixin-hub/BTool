@@ -120,6 +120,8 @@ function init() {
             }
 
             if (source.outputType != target?.inputType) {
+                console.log(source,target);
+                
                 message.error('源节点的输出类型和目标节点的输入类型不匹配')
                 return false
             }
@@ -478,4 +480,4 @@ onUnmounted(function () {
     position: relative;
 
 }
-</style>
+</style>@/ffmepg.wasm.core/js/util/jsPlumbSetting

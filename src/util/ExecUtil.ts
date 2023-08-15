@@ -1,6 +1,6 @@
 import { createDirectedGraph, findCycle, hasSingleNode } from '@/util/util'
 import pubsub from 'pubsub-js'
-import { NodeType, Topics } from '@/types';
+import { NodeType, StreamType, Topics } from '@/types';
 import useCommonStore from '@/store/common';
 import { NotificationPlacement, message } from 'ant-design-vue';
 import { notification } from 'ant-design-vue';
@@ -29,7 +29,7 @@ export async function execFromRoot(endId?: string) {
         if (node.exec) {
             try {
                 playload = await node.exec(playload)
-                if (!playload) {
+                if (!playload&&(node.type!=NodeType.TYPE_OUTPUT)) {
                     notification.error({
                         message: `执行节点：${node.id} 时发生错误`,
                         description: "请检查数据输入或刷新重试！",

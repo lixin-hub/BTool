@@ -10,7 +10,7 @@ export function trimAudioFromBuffer(audioBuffer: AudioBuffer, start: number, end
     var rate = audioBuffer.sampleRate;
 
     // 截取前3秒
-    var startOffset =rate* start;
+    var startOffset = rate * start;
     var endOffset = rate * end;
     var frameCount = endOffset - startOffset;
     // 创建同样采用率、同样声道数量，长度是前3秒的空的AudioBuffer
@@ -61,9 +61,21 @@ export function fileToAudioBuffer(file: File): Promise<AudioBuffer> {
 /**
  * 将 AudioBuffer 转换为 Blob 对象
  * @param audioBuffer 待转换的 AudioBuffer
- * @returns 转换后的 Blob 对象
+ * @returns 转换后的 Wav Blob 对象
  */
-export function convertAudioBufferToBlob(abuffer: AudioBuffer): Promise<Blob> {
+export function convertAudioBufferToWavBlob(abuffer: AudioBuffer): Promise<Blob> {
+
+    return new Promise(async (resolve, _reject) => {
+        let buffer = await convertAudioBufferToWavBuffer(abuffer)
+        resolve(new Blob([buffer], { type: "audio/wav" }))
+    })
+}
+/**
+ * 将 AudioBuffer 转换为 arraybuffer 对象
+ * @param audioBuffer 待转换的 AudioBuffer
+ * @returns 转换后的 buffer 对象
+ */
+export function convertAudioBufferToWavBuffer(abuffer: AudioBuffer): Promise<ArrayBuffer> {
 
     return new Promise((resolve, _reject) => {
         // Convert AudioBuffer to a Blob using WAVE representation
@@ -130,7 +142,7 @@ export function convertAudioBufferToBlob(abuffer: AudioBuffer): Promise<Blob> {
             view.setUint32(pos, data, true);
             pos += 4;
         }
-        resolve(new Blob([buffer], { type: "audio/wav" }))
+        resolve(buffer)
     })
 }
 

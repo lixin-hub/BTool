@@ -37,7 +37,7 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "pubsub.d.ts"
-  ],
+, "public/js/transcode.js"  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

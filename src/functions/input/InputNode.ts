@@ -42,7 +42,7 @@ export class InputNode extends DocNodeClass {
 
     async doubleClick() {
         const store = useStore()
-        let file = await openFileManager(".mp3")
+        let file = await openFileManager(".mp3,.wav,.ogg,.aac,.m4a")
         this.inputPlayload = file
         store.wavedata.file = file
         this.fileName = file.name

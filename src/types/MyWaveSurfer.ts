@@ -1,4 +1,4 @@
-import { convertAudioBufferToBlob, fileToAudioBuffer } from "@/util/AudioUtil";
+import { convertAudioBufferToWavBlob, fileToAudioBuffer } from "@/util/AudioUtil";
 import WaveSurferCache from "@/util/WaveSurferCache";
 import { message } from "ant-design-vue";
 import WaveSurfer from "wavesurfer.js";
@@ -26,7 +26,7 @@ export class MyWaveSurfer {
     async loadFile(file: File): Promise<void> {
         try {
             let buffer = await fileToAudioBuffer(file)
-            this.ws.loadBlob(await convertAudioBufferToBlob(buffer))
+            this.ws.loadBlob(await convertAudioBufferToWavBlob(buffer))
         } catch (error) {
             message.error("文件转换出错")
         }
@@ -36,7 +36,7 @@ export class MyWaveSurfer {
             return
         }
             try {
-                await this.ws.loadBlob(await convertAudioBufferToBlob(buffer))
+                await this.ws.loadBlob(await convertAudioBufferToWavBlob(buffer))
             } catch (error) {
                 console.log(error);
                 message.error("文件转换出错")

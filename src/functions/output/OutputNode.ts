@@ -2,10 +2,14 @@ import { NodeOptions, NodeType, Property, StreamType } from "@/types";
 import { UUID } from "@/util/util";
 import { merge } from "lodash";
 import { DocNodeClass } from "../DocNodeClass";
-import { convertAudioBufferToBlob, saveBlobAsFile } from "@/util/AudioUtil";
 import { message } from "ant-design-vue";
 import { HightlightDecorators } from "@/decorators";
-export class OutPutNode extends DocNodeClass {
+import { convertAudioBufferToWavBuffer, saveBlobAsFile } from "@/util/AudioUtil";
+import type { FileData } from '@ffmpeg/ffmpeg/dist/esm/types'
+import { FFmpegHelper } from "@/util/FFmpegHrlper";
+export abstract class OutPutNode extends DocNodeClass {
+    taskQueue: any = [];
+    fileName: string = UUID(4)
     constructor(data: NodeOptions) {
         super(data);
         //合并选项与自定义选项
@@ -14,22 +18,35 @@ export class OutPutNode extends DocNodeClass {
             maxInputNum: 1,
             inputType: StreamType.AUDIO,
             outputType: StreamType.NONE,
-            fileName: UUID(4),
             customProperties: Array<Property>(
                 { name: "fileName", label: "文件名", editable: true }
             )
         })
-        this.contextMenuItems =  this.contextMenuItems.filter((item)=>item.tips!=="preview")
+        this.contextMenuItems = this.contextMenuItems.filter((item) => item.tips !== "preview")
+        this.fileName = this.getFileName()
+    }
+    doubleClick(): void {
+        this.exec()
     }
     @HightlightDecorators()
-    async exec(playload: AudioBuffer, name: string){
+    async exec(playload?: AudioBuffer,) {
         this.inputPlayload = playload || this.getPreNode()
         if (!this.inputPlayload) {
             message.error("节点无输入")
             return
         }
-        let blob = await convertAudioBufferToBlob(this.inputPlayload);
-        await saveBlobAsFile(blob, name || 'trimmed_audio.wav');
+        let buffer: any = await convertAudioBufferToWavBuffer(this.inputPlayload)
+        let helper = FFmpegHelper.getInstance()
+        let data: FileData = await helper.transcode(buffer, "input.wav", this.getFileName(), this.getExecArgs())
+        await saveBlobAsFile(new Blob([(data as Uint8Array).buffer], { type: 'audio/' + this.getExection() }), this.getFileName())
+    };
+    abstract getExecArgs(): string[]
+    abstract getExection(): string
+    getFileName(): string {
+        let index = this.fileName.indexOf(".")
+        console.log(index);
+        if (index > 0)
+            this.fileName = this.fileName.substring(0, index)
+        return this.fileName + '.' + this.getExection()
     }
-
 }

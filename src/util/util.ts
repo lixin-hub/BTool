@@ -1,11 +1,22 @@
 import { DocNodeClass } from "@/functions/DocNodeClass";
 import { FileInputNode } from "@/functions/input/FileInputNode";
-import { FileOutNode } from "@/functions/output/FileOutPut";
 import { CutAudioNode } from "@/functions/process/CutAudioNode";
-import { ProcessNode } from "@/functions/process/ProcessNode";
-import { DocNodeData, Line, MenuNodeData, NodeKey, NodeOptions } from "@/types";
+import { DocNodeData, Line, MenuNodeData, NodeKey, NodeOptions, NodeType } from "@/types";
 import { message } from "ant-design-vue";
 import { throttle } from 'lodash';
+import { AACNode } from "@/functions/output/impl/AACNode";
+import { InputNode } from "@/functions/input/InputNode";
+import { ProcessNode } from "@/functions/process/ProcessNode";
+import { WavNode } from "@/functions/output/impl/WavNode";
+import { Mp3Node } from "@/functions/output/impl/Mp3Node";
+import { FLACNode } from "@/functions/output/impl/FLACNode";
+import { AIFFNode } from "@/functions/output/impl/AIFFNode";
+import { M4RNode } from "@/functions/output/impl/M4RNode";
+import { MMFNode } from "@/functions/output/impl/MMFNode";
+import { OGGNode } from "@/functions/output/impl/OGGNode";
+import { OPUSNode } from "@/functions/output/impl/OPUSNode";
+import { WMANode } from "@/functions/output/impl/WMANode";
+import { M4ANode } from "@/functions/output/impl/M4ANode";
 function uuid(len: number, radix: number): string {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
     var uuid = [], i;
@@ -171,8 +182,8 @@ export interface GraphNode {
 }
 //拓扑排序
 export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): DocNodeData[] {
-   console.log(nodeList);
-   
+    console.log(nodeList);
+
     const graph: { nodes: GraphNode[]; edges: Line[] } = {
         nodes: [],
         edges: []
@@ -258,6 +269,7 @@ export function hasSingleNode(lineList: Line[], nodeList: DocNodeData[]): DocNod
 
     return singleNodes;
 }
+//通过key来创建一个node实例
 export function createNodeInstanceByKey(key: string, options: NodeOptions): DocNodeData {
 
     if (key === NodeKey.KEY_FILE_INPUT) {
@@ -265,8 +277,50 @@ export function createNodeInstanceByKey(key: string, options: NodeOptions): DocN
     }
     if (key === NodeKey.KEY_PROCESS_CUT) {
         return new CutAudioNode(options);
-    } if (key === NodeKey.KEY_OUT_PUT_FILE) {
-        return new FileOutNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_WAV) {
+        return new WavNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_MP3) {
+        return new Mp3Node(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_AAC) {
+        return new AACNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_FLAC) {
+        return new FLACNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_AIFF) {
+        return new AIFFNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_M4R) {
+        return new M4RNode(options);
+    } 
+    if (key === NodeKey.KEY_OUT_PUT_M4A) {
+        return new M4ANode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_MMF) {
+        return new MMFNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_OGG) {
+        return new OGGNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_OPUS) {
+        return new OPUSNode(options);
+    }
+    if (key === NodeKey.KEY_OUT_PUT_WMA) {
+        return new WMANode(options);
+    }
+
+    // //默认情况
+    // if (options.type === NodeType.TYPE_OUTPUT) {
+    //     return new OutPutNode(options)
+    // }
+    if (options.type === NodeType.TYPE_INPUT) {
+        return new InputNode(options)
+    }
+    if (options.type === NodeType.TYPE_AUDIO_PROCESS) {
+        return new ProcessNode(options)
     }
     return new DocNodeClass(options)
 }

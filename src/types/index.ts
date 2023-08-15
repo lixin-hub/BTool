@@ -24,9 +24,19 @@ export interface Line {
     to: string,
 }
 export enum NodeKey {
-    KEY_FILE_INPUT = "1-1",
-    KEY_PROCESS_CUT = "2-1",
-    KEY_OUT_PUT_FILE = "5-1",
+    KEY_FILE_INPUT = "file-input",
+    KEY_PROCESS_CUT = "cut",
+    KEY_OUT_PUT_MP3 = "mp3",
+    KEY_OUT_PUT_WAV = "wav",
+    KEY_OUT_PUT_AAC = "aac",
+    KEY_OUT_PUT_AIFF = "aiff",
+    KEY_OUT_PUT_M4A = "m4a",
+    KEY_OUT_PUT_M4R = "m4r",
+    KEY_OUT_PUT_MMF = "mmf",
+    KEY_OUT_PUT_OGG = "ogg",
+    KEY_OUT_PUT_FLAC = "flac",
+    KEY_OUT_PUT_OPUS = "opus",
+    KEY_OUT_PUT_WMA = "wma",
 }
 // export interface ContextMenuItem{
 //     label: string,

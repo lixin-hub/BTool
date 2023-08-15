@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^6.1.0",
+    "@ffmpeg/ffmpeg": "^0.12.3",
+    "@ffmpeg/util": "^0.12.0",
     "@howdyjs/mouse-menu": "^2.0.8",
     "@types/lodash": "^4.14.195",
     "ant-design-vue": "4.x",

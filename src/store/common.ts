@@ -51,59 +51,56 @@ const menuItems: Array<MenuNodeData> = [
     }, {
         key: "3",
         icon: '',
-        label: "音频格式转换",
+        label: "输出",
         children: [
             {
-                key: "3-1",
+                key: NodeKey.KEY_OUT_PUT_MP3,
                 icon: '',
-                label: "转为MP3",
+                label: "输出为MP3",
             }, {
-                key: "3-2",
+                key: NodeKey.KEY_OUT_PUT_WAV,
                 icon: '',
-                label: "转为WAV",
+                label: "输出为WAV",
             }, {
-                key: "3-3",
+                key: NodeKey.KEY_OUT_PUT_AAC,
                 icon: '',
-                label: "转为AAC",
+                label: "输出为AAC",
+            },{
+                key: NodeKey.KEY_OUT_PUT_FLAC,
+                icon: '',
+                label: "输出为FLAC",
             }, {
-                key: "3-4",
+                key: NodeKey.KEY_OUT_PUT_AIFF,
                 icon: '',
-                label: "转为AIFF",
+                label: "输出为AIFF",
 
             }, {
-                key: "3-5",
+                key: NodeKey.KEY_OUT_PUT_M4A,
                 icon: '',
-                label: "转为M4A",
+                label: "输出为M4A",
 
             }, {
-                key: "3-6",
+                key: NodeKey.KEY_OUT_PUT_M4R, 
                 icon: '',
-                label: "转为M4R",
+                label: "输出为M4R",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_MMF,
+                icon: '',
+                label: "输出为MMF",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_OGG,
+                icon: '',
+                label: "输出为OGG",
 
             }, {
-                key: "3-7",
+                key: NodeKey.KEY_OUT_PUT_OPUS,
                 icon: '',
-                label: "转为MMF",
+                label: "输出为OPUS",
 
             }, {
-                key: "3-8",
+                key: NodeKey.KEY_OUT_PUT_WMA,
                 icon: '',
-                label: "转为OGG",
-
-            }, {
-                key: "3-9",
-                icon: '',
-                label: "转为MIDI",
-
-            }, {
-                key: "3-10",
-                icon: '',
-                label: "转为OPUS",
-
-            }, {
-                key: "3-11",
-                icon: '',
-                label: "转为WMA",
+                label: "输出为WMA",
             }],
     }, {
         key: "4",
@@ -140,31 +137,6 @@ const menuItems: Array<MenuNodeData> = [
 
         },
         ],
-    }, {
-        key: "5",
-        icon: '',
-        label: "输出",
-        children: [
-            {
-                key: NodeKey.KEY_OUT_PUT_FILE,
-                icon: '',
-                label: "输出到文件",
-            }, {
-                key: "5-2",
-                icon: '',
-                label: "输出到扬声器",
-            }, {
-                key: "5-3",
-                icon: '',
-                label: "输出到文本文件",
-
-            }, {
-                key: "5-4",
-                icon: '',
-                label: "输出到显示器",
-
-            },
-        ],
     }
 ]
 
@@ -180,7 +152,7 @@ const useStore = defineStore('common', {
             activeNode: {} as DocNodeData,
             activeLine: {} as Line,
             wavedata: {//示波器数据
-                file: {} as Blob,
+                file: {} as File,
                 cache:new Map<Blob,Array<Number>>()
             },
         
