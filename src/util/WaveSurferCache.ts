@@ -25,9 +25,9 @@ export default class WaveSurferCache {
         this.cache.set(key, value)
     }
   
-    static getWaveSurferById(nodeId: string): MyWaveSurfer {
+    static getWaveSurferById(nodeId: string,options?:WaveSurferOptions): MyWaveSurfer {
     
-        return this.getInstance().cache.get(nodeId) || this.getInstance().createWaveSurfer(nodeId)
+        return this.getInstance().cache.get(nodeId) || this.getInstance().createWaveSurfer(nodeId,options)
     }
     static getWaveSurferByNode(node: DocNodeData): MyWaveSurfer {
         return this.getWaveSurferById(node.id)

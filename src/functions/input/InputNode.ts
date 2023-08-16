@@ -3,11 +3,10 @@ import { fileToAudioBuffer } from "@/util/AudioUtil";
 import { UUID, openFileManager } from "@/util/util";
 import { merge } from "lodash";
 import { DocNodeClass } from "../DocNodeClass";
-import { NodeOptions, NodeType, StreamType } from "@/types";
+import { ContextMenuSetting, NodeOptions, NodeType, StreamType } from "@/types";
 import { message } from "ant-design-vue";
 
 import WaveSurferCache from "@/util/WaveSurferCache";
-import { MenuSetting } from "@howdyjs/mouse-menu/dist/types";
 import { HightlightDecorators } from "@/decorators";
 
 export class InputNode extends DocNodeClass {
@@ -36,13 +35,13 @@ export class InputNode extends DocNodeClass {
             }
         )
         this.contextMenuItems = this.contextMenuItems.sort(
-            (a: MenuSetting, b: MenuSetting) => { return a.order - b.order })
+            (a: ContextMenuSetting, b: ContextMenuSetting) => { return a.order - b.order })
 
     }
 
     async doubleClick() {
         const store = useStore()
-        let file = await openFileManager(".mp3,.wav,.ogg,.aac,.m4a")
+        let file = await openFileManager(".mp3,.wav,.aac,.lflac,aiff,.m4a,.mmf,.ogg,.opus.wma")
         this.inputPlayload = file
         store.wavedata.file = file
         this.fileName = file.name
@@ -65,10 +64,10 @@ export class InputNode extends DocNodeClass {
         }
         this.outputPlayload = audioBuffer
         this.playload = audioBuffer
-       await this.getWs().loadBuffer(audioBuffer)
+        await this.getWs().loadBuffer(audioBuffer)
         //  this.activated()
         return audioBuffer;
     }
-   
+
 
 }

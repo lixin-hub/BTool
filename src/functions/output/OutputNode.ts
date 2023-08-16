@@ -6,7 +6,7 @@ import { message } from "ant-design-vue";
 import { HightlightDecorators } from "@/decorators";
 import { convertAudioBufferToWavBuffer, saveBlobAsFile } from "@/util/AudioUtil";
 import type { FileData } from '@ffmpeg/ffmpeg/dist/esm/types'
-import { FFmpegHelper } from "@/util/FFmpegHrlper";
+import { FFmpegHelper } from "@/util/FFmpegHelper";
 export abstract class OutPutNode extends DocNodeClass {
     taskQueue: any = [];
     fileName: string = UUID(4)
@@ -40,11 +40,12 @@ export abstract class OutPutNode extends DocNodeClass {
         let data: FileData = await helper.transcode(buffer, "input.wav", this.getFileName(), this.getExecArgs())
         await saveBlobAsFile(new Blob([(data as Uint8Array).buffer], { type: 'audio/' + this.getExection() }), this.getFileName())
     };
+    //获取执行参数
     abstract getExecArgs(): string[]
+    //获取后缀名
     abstract getExection(): string
     getFileName(): string {
         let index = this.fileName.indexOf(".")
-        console.log(index);
         if (index > 0)
             this.fileName = this.fileName.substring(0, index)
         return this.fileName + '.' + this.getExection()

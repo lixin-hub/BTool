@@ -13,10 +13,10 @@ import { CustomMouseMenu } from '@howdyjs/mouse-menu';
 import { Ref, nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from "vue";
 import jsPlumbSetting from "@/util/jsPlumbSetting";
 import useCommonStore from '@/store/common'
-import { DocNodeData, Line, StreamType, Topics, ShortCut, NodeType, NodeOptions } from "@/types";
+import { DocNodeData, Line, NodeKey, StreamType, Topics, ShortCut, NodeType, NodeOptions } from "@/types";
 import { UUID, findDocNodeById, createMousePositionTracker, findCycle, findParentNode, createNodeInstanceByKey } from "@/util/util";
 import { DocNode } from "@/components/Node";
-import { Connection, ConnectionMadeEventInfo, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
+import { ConnectParams, Connection, ConnectionMadeEventInfo, OnConnectionBindInfo, jsPlumb, jsPlumbInstance } from "jsplumb";
 import { message } from 'ant-design-vue';
 import { storeToRefs } from "pinia";
 import * as lodash from "lodash";
@@ -44,10 +44,10 @@ const { activeNode } = storeToRefs(commonStore)
 let psateData: DocNodeData | null
 //初始化本地数据
 function initLocalData() {
-    
+
     let localNodesStr = localStorage.getItem("nodeList")
     let localLineStr = localStorage.getItem("lineList")
-    
+
     let localNodes, localLines;
     if (localNodesStr) {
         localNodes = JSON.parse(localNodesStr) as Array<DocNodeData>
@@ -62,7 +62,7 @@ function initLocalData() {
         //根据每一项去重
         lodash.uniqWith(localLines, lodash.isEqual)
         commonStore.lineList = localLines
-    
+
     }
 }
 function init() {
@@ -120,8 +120,7 @@ function init() {
             }
 
             if (source.outputType != target?.inputType) {
-                console.log(source,target);
-                
+                console.log(source, target);
                 message.error('源节点的输出类型和目标节点的输入类型不匹配')
                 return false
             }
@@ -153,6 +152,7 @@ function init() {
             }
 
             if (loadFinish) {
+                //克隆一下是为了验证是否成环
                 let clone = lodash.cloneDeep(lineList)
                 clone.push({ from, to })
                 let cycle = findCycle(clone)
@@ -163,7 +163,20 @@ function init() {
                     message.error('节点间不能形成环')
                     return false
                 }
-                lineList.push({ from, to })
+                let line: Line = { from, to }
+                //判断是不是合并节点
+                let target = findDocNodeById(nodeList, to)
+                if (target?.key === NodeKey.KEY_PROCESS_MERGE) {
+                    //合并节点加上label
+                    let inNum = target.pre?.length || 0
+                    line.label = "输入" + (inNum+1)
+                    evt.connection.addOverlay(["Label", {
+                        label: line.label,
+                        location: 0.5,
+                        cssClass: "label-overlay"
+                    }]);
+                }
+                lineList.push(line)
                 message.success('连接成功')
                 return true
             }
@@ -176,9 +189,13 @@ function init() {
             let target = findDocNodeById(nodeList, targetId)
             //建立连接
             if (source && target) {
-                console.log(nodeList);
                 target?.pre?.push(sourceId)
                 source?.next?.push(targetId)
+                //去重 
+                if (target)
+                    target.pre = lodash.uniq(target.pre)
+                if (source)
+                    source.next = lodash.uniq(source.next)
             }
         })
 
@@ -203,6 +220,25 @@ function deleteNode(id: string) {
         message.error("请选中结点")
         return
     }
+    let node = nodeList[index]
+    let preNodeIdList = node.pre
+    let nextNodeIdList = node.next
+    //去掉在前驱节点中的当前id
+    if (preNodeIdList) {
+        for (let i = 0; i < preNodeIdList.length; i++) {
+            let temp = findDocNodeById(nodeList, preNodeIdList[i])
+            if (!temp) { break }
+            temp.next = temp.next?.filter((item => { return item != id })) || temp.next
+        }
+    }
+    //去掉在后驱节点中的当前id
+    if (nextNodeIdList) {
+        for (let i = 0; i < nextNodeIdList.length; i++) {
+            let temp = findDocNodeById(nodeList, nextNodeIdList[i])
+            if (!temp) { break }
+            temp.pre = temp.pre?.filter((item => { return item != id })) || temp.pre
+        }
+    }
     deleteAllLine(id)
     nodeList.splice(index, 1)
     // activeNode.value = nodeList[0]
@@ -212,6 +248,18 @@ function deleteNode(id: string) {
 }
 // 删除线
 function deleteLine(from: string, to: string): boolean {
+    //去掉在前驱节点中的当前id
+    let tempF = findDocNodeById(nodeList, from)
+    if (tempF) {
+        tempF.next = tempF.next?.filter((item => { return item != to })) || tempF.next
+    }
+
+    //去掉在后驱节点中的当前id
+    let tempN = findDocNodeById(nodeList, to)
+    if (tempN) {
+        tempN.pre = tempN.pre?.filter((item => { return item != from })) || tempN.pre
+    }
+
     let index = lineList.findIndex(function (line) {
         return (line.from === from && line.to === to)
     })
@@ -244,6 +292,7 @@ function hasLine(from: string, to: string): boolean {
 function hashOppositeLine(from: string, to: string): boolean {
     return hasLine(to, from)
 }
+//点击节点，激活
 function onNodeClick(node: DocNodeData) {
     activatedNode(node)
 }
@@ -292,9 +341,18 @@ function loadInitNodeData(nodeList: Array<DocNodeData>, lineList: Array<Line>) {
     // 初始化连线
     for (var i = 0; i < lineList.length; i++) {
         let line = lineList[i]
-        var connParam = {
+        var connParam: ConnectParams = {
             source: line.from,
             target: line.to,
+            overlays: [
+                ["Label",
+                    {
+                        label: line.label,
+                        cssClass: "label-overlay",
+                        location: 0.5,
+                    }
+                ]
+            ]
         }
         instance.connect(connParam, jsPlumbSetting.connectOptions)
     }
@@ -472,12 +530,15 @@ onUnmounted(function () {
     mouseTracker.destroy()
 })
 </script>
-<style scoped lang="scss">
+<style lang="scss">
 .container {
     width: 100%;
     height: 100%;
     // background-color: antiquewhite;
     position: relative;
-
 }
-</style>@/ffmepg.wasm.core/js/util/jsPlumbSetting
+.label-overlay{
+    color: rgb(253, 253, 253);
+    font-size: 12px;
+}
+</style>

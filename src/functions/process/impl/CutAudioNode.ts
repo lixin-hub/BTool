@@ -1,5 +1,5 @@
 import { NodeOptions, } from "@/types";
-import { ProcessNode } from "./ProcessNode";
+import { ProcessNode } from "../ProcessNode";
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions' //导入时间轴插件
 import { trimAudioFromBuffer } from "@/util/AudioUtil";
 import { HightlightDecorators } from "@/decorators";
@@ -39,7 +39,6 @@ export class CutAudioNode extends ProcessNode {
         } else {
             wsRegions = ws.registerPlugin(RegionsPlugin.create())
             wsRegions.on('region-updated', (region) => {
-                console.log('Updated region', region)
                 this.start = Number.parseFloat(Number(region.start).toFixed(3))
                 this.end = Number.parseFloat(Number(region.end).toFixed(3))
             })

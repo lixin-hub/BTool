@@ -57,7 +57,7 @@ export default {
             // 线外边的宽，值越大，线的点击范围越大
             outlineWidth: 10
         },
-        DragOptions: { cursor: 'pointer', zIndex: 2000 },
+        DragOptions: { cursor: 'move', zIndex: 2000 },
         /**
          *  叠加 参考： https://www.jianshu.com/p/d9e9918fd928
          */
@@ -79,8 +79,8 @@ export default {
             // }],
             ['Label', {
                 label: '',
-                location: 0.1,
-                cssClass: 'aLabel'
+                location: 0.5,
+                cssClass: 'line-label'
             }]
         ],
         // 绘制图的模式 svg、canvas
@@ -105,10 +105,7 @@ export default {
         labelStyle: {
             cssClass: 'flowLabel'
         },
-        // 修改了jsplumb 源码，支持label 为空传入自定义style
-        emptyLabelStyle: {
-            cssClass: 'emptyFlowLabel'
-        }
+        
     },
     /**
      * 源点配置参数
@@ -153,7 +150,7 @@ export default {
         anchor: 'Continuous',
         // 是否允许自己连接自己
         allowLoopback: false,
-        dropOptions: { hoverClass: 'ef-drop-hover' }
+        dropOptions: { hoverClass: 'ef-drop-hover' },
     },
     endPointOptions: {
         connector: 'Straight' as ConnectorSpec,

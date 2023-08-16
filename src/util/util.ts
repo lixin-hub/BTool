@@ -1,9 +1,10 @@
 import { DocNodeClass } from "@/functions/DocNodeClass";
 import { FileInputNode } from "@/functions/input/FileInputNode";
-import { CutAudioNode } from "@/functions/process/CutAudioNode";
+import { CutAudioNode } from "@/functions/process/impl/CutAudioNode";
 import { DocNodeData, Line, MenuNodeData, NodeKey, NodeOptions, NodeType } from "@/types";
 import { message } from "ant-design-vue";
 import { throttle } from 'lodash';
+import { toRaw } from "vue";
 import { AACNode } from "@/functions/output/impl/AACNode";
 import { InputNode } from "@/functions/input/InputNode";
 import { ProcessNode } from "@/functions/process/ProcessNode";
@@ -17,6 +18,7 @@ import { OGGNode } from "@/functions/output/impl/OGGNode";
 import { OPUSNode } from "@/functions/output/impl/OPUSNode";
 import { WMANode } from "@/functions/output/impl/WMANode";
 import { M4ANode } from "@/functions/output/impl/M4ANode";
+import { MerageAudioNode as MergeAudioNode } from "@/functions/process/impl/MergeAudioNode";
 function uuid(len: number, radix: number): string {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
     var uuid = [], i;
@@ -182,7 +184,7 @@ export interface GraphNode {
 }
 //拓扑排序
 export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): DocNodeData[] {
-    console.log(nodeList);
+    console.log("执行顺序：", toRaw(nodeList));
 
     const graph: { nodes: GraphNode[]; edges: Line[] } = {
         nodes: [],
@@ -243,7 +245,7 @@ export function createDirectedGraph(nodeList: DocNodeData[], lineList: Line[]): 
             });
         }
     }
-    console.log(graph.nodes);
+    // console.log(graph.nodes);
 
     // 步骤 8: 检查是否存在循环依赖
     const hasCycle = graph.nodes.some(node => node.inputs.length > 0);
@@ -277,6 +279,8 @@ export function createNodeInstanceByKey(key: string, options: NodeOptions): DocN
     }
     if (key === NodeKey.KEY_PROCESS_CUT) {
         return new CutAudioNode(options);
+    } if (key === NodeKey.KEY_PROCESS_MERGE) {
+        return new MergeAudioNode(options);
     }
     if (key === NodeKey.KEY_OUT_PUT_WAV) {
         return new WavNode(options);
@@ -295,7 +299,7 @@ export function createNodeInstanceByKey(key: string, options: NodeOptions): DocN
     }
     if (key === NodeKey.KEY_OUT_PUT_M4R) {
         return new M4RNode(options);
-    } 
+    }
     if (key === NodeKey.KEY_OUT_PUT_M4A) {
         return new M4ANode(options);
     }

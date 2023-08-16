@@ -22,6 +22,7 @@ export enum NodeType {
 export interface Line {
     from: string,
     to: string,
+    label?:string
 }
 export enum NodeKey {
     KEY_FILE_INPUT = "file-input",
@@ -37,6 +38,7 @@ export enum NodeKey {
     KEY_OUT_PUT_FLAC = "flac",
     KEY_OUT_PUT_OPUS = "opus",
     KEY_OUT_PUT_WMA = "wma",
+    KEY_PROCESS_MERGE = "merge"
 }
 // export interface ContextMenuItem{
 //     label: string,
@@ -44,6 +46,9 @@ export enum NodeKey {
 //     fn: () => void
 
 // }
+export interface ContextMenuSetting extends MenuSetting {
+    order:number
+}
 export type Property = {
     name: string,
     label: string, //描述

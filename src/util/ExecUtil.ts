@@ -28,7 +28,7 @@ export async function execFromRoot(endId?: string) {
         let node = sortedNode[i]
         if (node.exec) {
             try {
-                playload = await node.exec(playload)
+                playload = await node.exec()
                 if (!playload&&(node.type!=NodeType.TYPE_OUTPUT)) {
                     notification.error({
                         message: `执行节点：${node.id} 时发生错误`,

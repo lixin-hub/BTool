@@ -1,11 +1,11 @@
-import { DocNodeData, StreamType, Property, NodeType, MenuNodeData, NodeOptions, ShortCut } from "@/types";
+import { DocNodeData, StreamType, Property, NodeType, MenuNodeData, NodeOptions, ShortCut, ContextMenuSetting, Topics } from "@/types";
 import { MyWaveSurfer } from "@/types/MyWaveSurfer";
 import WaveSurferCache from "@/util/WaveSurferCache";
 import { UUID, getPreNodeData } from "@/util/util";
 import useCommonStore from '@/store/common';
-import { MenuSetting } from "@howdyjs/mouse-menu/dist/types";
 import { NotificationPlacement, message, notification } from "ant-design-vue";
-const store=useCommonStore()
+import { nextTick } from "vue";
+const store = useCommonStore()
 export class DocNodeClass implements DocNodeData {
     [key: string]: any
     id: string
@@ -25,8 +25,8 @@ export class DocNodeClass implements DocNodeData {
     inputPlayload?: any;
     inputType?: StreamType
     outputType?: StreamType
-    contextMenuItems: MenuSetting[]
-    playload?: AudioBuffer|Blob
+    contextMenuItems: ContextMenuSetting[]
+    playload?: AudioBuffer | Blob | AudioBuffer[]
     customProperties?: Property[]
     prop?: string
     children?: MenuNodeData[]
@@ -52,9 +52,9 @@ export class DocNodeClass implements DocNodeData {
                     try {
                         this.exec()
                     } catch (error) {
-                        message.error(error+'')
+                        message.error(error + '')
                         console.log(error);
-                        
+
                     }
                 }
             },
@@ -81,7 +81,7 @@ export class DocNodeClass implements DocNodeData {
                     PubSub.publish(ShortCut.KEY_CTRL_C, this.id)
                 }
             },
-          
+
             {
                 order: 5,
                 label: '删除',
@@ -117,12 +117,16 @@ export class DocNodeClass implements DocNodeData {
     activated() {
         this.showWave()
     }
- 
- 
-     deActivated() {
-         this.hideWave()
-     }
-    exec(..._parms:any ) {
+    hideAllWave() {
+        store.nodeList.forEach(node => {
+            node.hideWave("wave" + node.id)
+        })
+    }
+    deActivated() {
+        PubSub.publish(Topics.DEHIGHT_LIGHT_NODES,{id:this.id,type:"active"})
+        this.hideAllWave()
+    }
+    exec(..._parms: any) {
         throw new Error("Method not implemented.");
     }
     validate?(): boolean | Promise<boolean> {
@@ -132,23 +136,24 @@ export class DocNodeClass implements DocNodeData {
         return WaveSurferCache.getWaveSurferByNode(this)
     }
     preview() {
-        if (!(this.playload instanceof AudioBuffer)){
+        if (!(this.playload instanceof AudioBuffer)) {
             message.error("当前节点没有数据，选择文件然后右键执行")
             return
         }
         if (this.getWs().ws.isPlaying()) {
             return
         }
-            this.getWs().loadBuffer(this.playload)
+        this.getWs().loadBuffer(this.playload)
     }
-    showWave(){
-        let wave: HTMLDivElement = document.getElementById("wave" +this.id) as HTMLDivElement
-        if(!wave) return
-           wave.style.display = "block"
+    showWave(id?: string) {
+        let wave: HTMLDivElement = document.getElementById(id || "wave" + this.id) as HTMLDivElement
+        if (!wave) return
+        wave.style.display = "block"
     }
-    hideWave() {
-        let wave: HTMLDivElement = document.getElementById("wave" + this.id) as HTMLDivElement
-        if(!wave) return
+
+    hideWave(id?: string) {
+        let wave: HTMLDivElement = document.getElementById(id || "wave" + this.id) as HTMLDivElement
+        if (!wave) return
         wave.style.display = "none"
     }
     getPreNode(): AudioBuffer | undefined {
@@ -166,4 +171,28 @@ export class DocNodeClass implements DocNodeData {
         }
         return buffer
     }
+    getPreNodes(): AudioBuffer[] {
+        let arr: AudioBuffer[] = []
+        for (let i = 0; i < this.pre.length; i++) {
+            let pre = this.pre[i];
+            let buffer = getPreNodeData<AudioBuffer>(store.nodeList, pre)
+            if (buffer)
+                arr.push(buffer)
+            else {
+                PubSub.publish(Topics.HIGHT_LIGHT_NODES, { ids: pre, ms: 2000 })
+                message.warn(`节点：${pre} 数据为空！`)
+            }
+        }
+        if (arr.length < this.pre.length) {
+            notification.warn(
+                {
+                    message: "右键节点选择执行到此节点或单击工具栏执行菜单",
+                    duration: 4,
+                    placement: 'bottomRight'
+                }
+            )
+        }
+        return arr
+    }
+
 }

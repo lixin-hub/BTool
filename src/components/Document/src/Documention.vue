@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="bottom">
-                <!-- <Wave></Wave> -->
+            <MergeNode></MergeNode>
                 <div id="wave"></div>
             </div>
         </div>
@@ -23,7 +23,7 @@
 import TabContent from './TabContent.vue';
 import Content from './Content.vue';
 import { Rside } from '@/components/ASide'
-
+import {MergeNode} from '@/components/Node/index'
 </script>
     
 <style lang="scss" scoped>

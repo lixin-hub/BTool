@@ -23,6 +23,7 @@ export default function HightlightDecorators() {
                     PubSub.publish(Topics.HIGHT_LIGHT_NODES, { ids: that.id, ms: 3000, type: "error" });
                 }
                 notification.close(that.id)
+                message.success("节点运行成功！")
                 // 取消高亮节点
                 PubSub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: that.id, type: "run" });
                 return playload;

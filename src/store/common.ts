@@ -35,7 +35,7 @@ const menuItems: Array<MenuNodeData> = [
             icon: '',
             label: "裁减",
         }, {
-            key: "2-2",
+            key: NodeKey.KEY_PROCESS_MERGE,
             icon: '',
             label: "合并",
 
@@ -47,66 +47,8 @@ const menuItems: Array<MenuNodeData> = [
             key: "2-4",
             icon: '',
             label: "淡出",
-        }],
-    }, {
-        key: "3",
-        icon: '',
-        label: "输出",
-        children: [
-            {
-                key: NodeKey.KEY_OUT_PUT_MP3,
-                icon: '',
-                label: "输出为MP3",
-            }, {
-                key: NodeKey.KEY_OUT_PUT_WAV,
-                icon: '',
-                label: "输出为WAV",
-            }, {
-                key: NodeKey.KEY_OUT_PUT_AAC,
-                icon: '',
-                label: "输出为AAC",
-            },{
-                key: NodeKey.KEY_OUT_PUT_FLAC,
-                icon: '',
-                label: "输出为FLAC",
-            }, {
-                key: NodeKey.KEY_OUT_PUT_AIFF,
-                icon: '',
-                label: "输出为AIFF",
-
-            }, {
-                key: NodeKey.KEY_OUT_PUT_M4A,
-                icon: '',
-                label: "输出为M4A",
-
-            }, {
-                key: NodeKey.KEY_OUT_PUT_M4R, 
-                icon: '',
-                label: "输出为M4R",
-            }, {
-                key: NodeKey.KEY_OUT_PUT_MMF,
-                icon: '',
-                label: "输出为MMF",
-            }, {
-                key: NodeKey.KEY_OUT_PUT_OGG,
-                icon: '',
-                label: "输出为OGG",
-
-            }, {
-                key: NodeKey.KEY_OUT_PUT_OPUS,
-                icon: '',
-                label: "输出为OPUS",
-
-            }, {
-                key: NodeKey.KEY_OUT_PUT_WMA,
-                icon: '',
-                label: "输出为WMA",
-            }],
-    }, {
-        key: "4",
-        icon: '',
-        label: "AI处理",
-        children: [{
+        },
+        {
             key: "4-1",
             icon: '',
             label: "语音降噪",
@@ -137,7 +79,61 @@ const menuItems: Array<MenuNodeData> = [
 
         },
         ],
-    }
+    }, {
+        key: "3",
+        icon: '',
+        label: "输出",
+        children: [
+            {
+                key: NodeKey.KEY_OUT_PUT_MP3,
+                icon: '',
+                label: "输出为MP3",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_WAV,
+                icon: '',
+                label: "输出为WAV",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_AAC,
+                icon: '',
+                label: "输出为AAC",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_FLAC,
+                icon: '',
+                label: "输出为FLAC",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_AIFF,
+                icon: '',
+                label: "输出为AIFF",
+
+            }, {
+                key: NodeKey.KEY_OUT_PUT_M4A,
+                icon: '',
+                label: "输出为M4A",
+
+            }, {
+                key: NodeKey.KEY_OUT_PUT_M4R,
+                icon: '',
+                label: "输出为M4R",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_MMF,
+                icon: '',
+                label: "输出为MMF",
+            }, {
+                key: NodeKey.KEY_OUT_PUT_OGG,
+                icon: '',
+                label: "输出为OGG",
+
+            }, {
+                key: NodeKey.KEY_OUT_PUT_OPUS,
+                icon: '',
+                label: "输出为OPUS",
+
+            }, {
+                key: NodeKey.KEY_OUT_PUT_WMA,
+                icon: '',
+                label: "输出为WMA",
+            }],
+    },
 ]
 
 
@@ -153,9 +149,23 @@ const useStore = defineStore('common', {
             activeLine: {} as Line,
             wavedata: {//示波器数据
                 file: {} as File,
-                cache:new Map<Blob,Array<Number>>()
+                cache: new Map<Blob, Array<Number>>()
             },
-        
+            mregeOption: {
+                showMergeView: false,
+                input1: {
+                    width: 100,
+                    left:0,
+                    right:0
+                }, 
+                input2: {
+                    width: 100,
+                    left:0,
+                    right:0
+                }
+
+
+            },
             waveSurfer: {} as WaveSurfer,
             sortedNodeList: Array<DocNodeData>(),
         }
