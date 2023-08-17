@@ -7,7 +7,7 @@ import options from '@/util/WaveSurferOptions'
 import { watch } from "vue";
 import { storeToRefs } from "pinia";
 import { message, notification } from "ant-design-vue";
-import { max } from "lodash";
+import { MyWaveSurfer } from "@/types/MyWaveSurfer";
 const store = useCommonStore()
 const { mregeOption, activeNode } = storeToRefs(store)
 export class MerageAudioNode extends ProcessNode {
@@ -54,7 +54,8 @@ export class MerageAudioNode extends ProcessNode {
             return
         }
         this.playload = this.inputPlayload
-        mregeOption.value.showMergeView = true
+        if (MyWaveSurfer.alowLoading)
+            mregeOption.value.showMergeView = true
         //长度：时间=100px:20s=5：1
         let input1Length = this.inputPlayload[0].duration * 5
         let input2Length = this.inputPlayload[1].duration * 5
@@ -67,27 +68,30 @@ export class MerageAudioNode extends ProcessNode {
     }
     @HightlightDecorators()
     async exec(playload?: AudioBuffer[], offset1?: number, offset2?: number): Promise<AudioBuffer | undefined> {
-        this.doubleClick()
-        const loadedBuffer: AudioBuffer[] = (playload || this.playload) as AudioBuffer[]||[]
-        const o1 = offset1 || this.offset1
-        const o2 = offset2 || this.offset2
-        if (loadedBuffer.length < 2) {
-            notification.warn({
-                message:"不能执行节点："+this.id+"  因为没有可执行数据！",
-                duration:3,
-                placement:"bottomRight"
-            })
-            return
-        }
         return new Promise(async (resolove) => {
+            this.doubleClick()
+            const loadedBuffer: AudioBuffer[] = (playload || this.playload) as AudioBuffer[] || []
+            
+            const o1 = offset1 || this.offset1
+            const o2 = offset2 || this.offset2
+            if (loadedBuffer.length < 2) {
+                notification.warn({
+                    message: "不能执行节点：" + this.id + "  因为没有可执行数据！",
+                    duration: 3,
+                    placement: "bottomRight"
+                })
+                return
+            }
             let msg = message.info("正在运行，请稍候！", 0)
             options.splitChannels = undefined
             // let data = await FFmpegHelper.mergeAudio(loadedBuffer[0], loadedBuffer[1], o1, 2)
             // let blob=new Blob([(data as Uint8Array).buffer], { type: 'audio/wav' })
             // let audioBuffer= await fileToAudioBuffer(blob as File)
             let audioBuffer = await this.mergeAudioBuffers(loadedBuffer[0], loadedBuffer[1], o1, o2)
-            let ws = WaveSurferCache.getWaveSurferById(this.id, options)
-            ws.loadBuffer(audioBuffer)
+            let ws = this.getWs()            
+            await ws.loadBuffer(audioBuffer)
+            this.showWave()
+            // ws.ws.setOptions(options)
             msg()
             resolove(audioBuffer)
             this.outputPlayload = audioBuffer
@@ -108,7 +112,7 @@ export class MerageAudioNode extends ProcessNode {
         let minEnd = Math.min(offsetSamples1 + buffer1.length, offsetSamples2 + buffer2.length)
         //offset谁短
         let minIndex = offsetSamples1 <= offsetSamples2 ? 1 : 2
-    
+
 
         // 创建新的音频缓冲区
         const audioContext = new AudioContext();
@@ -144,7 +148,7 @@ export class MerageAudioNode extends ProcessNode {
                 else if (i >= minEnd) {
                     if (minIndex == 1) {//输入1偏移更短
                         //输入1先完 后面的数据是输入2的
-                        if (buffer1Data.length+offsetSamples1<buffer2Data.length+offsetSamples2) {
+                        if (buffer1Data.length + offsetSamples1 < buffer2Data.length + offsetSamples2) {
                             mixedData[i] = buffer2Data[i - maxOffset]
 
                         } else {//输入2先完 后面的是输入1的
@@ -153,7 +157,7 @@ export class MerageAudioNode extends ProcessNode {
                         }
                     } else {//输入2更短
                         //输入1先完 后面的数据是输入2的
-                        if (buffer1Data.length+offsetSamples1<buffer2Data.length+offsetSamples2) {
+                        if (buffer1Data.length + offsetSamples1 < buffer2Data.length + offsetSamples2) {
                             mixedData[i] = buffer2Data[i - minOffset]
 
                         } else {//输入2先完 后面的是输入1的

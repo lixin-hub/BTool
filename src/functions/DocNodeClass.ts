@@ -4,7 +4,6 @@ import WaveSurferCache from "@/util/WaveSurferCache";
 import { UUID, getPreNodeData } from "@/util/util";
 import useCommonStore from '@/store/common';
 import { NotificationPlacement, message, notification } from "ant-design-vue";
-import { nextTick } from "vue";
 const store = useCommonStore()
 export class DocNodeClass implements DocNodeData {
     [key: string]: any
@@ -116,11 +115,11 @@ export class DocNodeClass implements DocNodeData {
 
     activated() {
         this.showWave()
+        console.dir(WaveSurferCache.getInstance().cache);
+        
     }
     hideAllWave() {
-        store.nodeList.forEach(node => {
-            node.hideWave("wave" + node.id)
-        })
+        MyWaveSurfer.hideAllWave()
     }
     deActivated() {
         PubSub.publish(Topics.DEHIGHT_LIGHT_NODES,{id:this.id,type:"active"})
@@ -133,7 +132,10 @@ export class DocNodeClass implements DocNodeData {
         throw new Error("Method not implemented.");
     }
     getWs(): MyWaveSurfer {
-        return WaveSurferCache.getWaveSurferByNode(this)
+        return WaveSurferCache.getWaveSurferByNode(this) as MyWaveSurfer
+    }
+    getWsUnSafe(): MyWaveSurfer|undefined {
+        return WaveSurferCache.getWaveSurferByNode(this,true)
     }
     preview() {
         if (!(this.playload instanceof AudioBuffer)) {

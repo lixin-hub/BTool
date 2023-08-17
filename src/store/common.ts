@@ -40,14 +40,10 @@ const menuItems: Array<MenuNodeData> = [
             label: "合并",
 
         }, {
-            key: "2-3",
+            key:NodeKey.KEY_PROCESS_EASE_IN_OUT,
             icon: '',
-            label: "淡入",
-        }, {
-            key: "2-4",
-            icon: '',
-            label: "淡出",
-        },
+            label: "淡入淡出",
+        }, 
         {
             key: "4-1",
             icon: '',

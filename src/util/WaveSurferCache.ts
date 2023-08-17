@@ -11,12 +11,19 @@ export default class WaveSurferCache {
      * @param key nodeId
      * @param 渲染 数据
      */
-    private cache: Map<String, MyWaveSurfer>;
+    private _cache: Map<String, MyWaveSurfer>
+    public get cache(): Map<String, MyWaveSurfer> {
+        return this._cache;
+    }
+    public set cache(value: Map<String, MyWaveSurfer>) {
+        this._cache = value;
+    }
 
     private static instance: WaveSurferCache;
     private constructor() {
-        this.cache = new Map<String, MyWaveSurfer>;
+        this._cache = new Map<String, MyWaveSurfer>;
     }
+
     public static getInstance() {
         if (!WaveSurferCache.instance) this.instance = new WaveSurferCache()
         return this.instance
@@ -24,20 +31,25 @@ export default class WaveSurferCache {
     protected setCache(key: String, value: MyWaveSurfer) {
         this.cache.set(key, value)
     }
-  
-    static getWaveSurferById(nodeId: string,options?:WaveSurferOptions): MyWaveSurfer {
-    
-        return this.getInstance().cache.get(nodeId) || this.getInstance().createWaveSurfer(nodeId,options)
+
+    static getWaveSurferById(nodeId: string, options?: WaveSurferOptions): MyWaveSurfer {
+        return this.getInstance().createWaveSurfer(nodeId, options)
     }
-    static getWaveSurferByNode(node: DocNodeData): MyWaveSurfer {
-        return this.getWaveSurferById(node.id)
+    static getWaveSurferByNode(node: DocNodeData, nullable = false): MyWaveSurfer | undefined {
+        return nullable ? (
+            this.getInstance().cache.get(node.id)
+        ) : this.getWaveSurferById(node.id)
     }
     createWaveSurfer(nodeId: string, options?: WaveSurferOptions): MyWaveSurfer {
         if (this.cache.has(nodeId)) return this.cache.get(nodeId) as MyWaveSurfer
-        let div=document.createElement("div")
-        div.id="wave"+nodeId
-        document.querySelector("#wave")?.appendChild(div)
-        wvOptions.container="#wave"+nodeId
+        let id = "wave" + nodeId
+       let el= document.querySelector(id)
+        let div = el||document.createElement("div")
+        div.id=id
+        if(!el){
+            document.querySelector("#wave")?.appendChild(div)
+        }
+        wvOptions.container = "#wave" + nodeId
         let ws = WaveSurfer.create(Object.assign(wvOptions, options))
         /** When a waveform is loaded */
         ws.on('load', () => {
@@ -46,6 +58,7 @@ export default class WaveSurferCache {
         /** When a waveform is drawn */
         ws.on('redraw', () => {
         })
+        
         this.setCache(nodeId, new MyWaveSurfer(ws))
         return this.cache.get(nodeId) as MyWaveSurfer
 
@@ -54,7 +67,12 @@ export default class WaveSurferCache {
         return this.getInstance().cache.has(nodeId)
     }
     static remove(nodeId: string): boolean {
-        this.getWaveSurferById(nodeId).destroy()
-        return this.getInstance().cache.delete(nodeId)
+        if (!nodeId) return false
+        let ws = this.getInstance().cache.get(nodeId)
+        if (ws) {
+            ws.destroy()            
+            return this.getInstance().cache.delete(nodeId)
+        }
+        return false
     }
 }

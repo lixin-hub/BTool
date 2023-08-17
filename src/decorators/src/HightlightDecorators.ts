@@ -1,5 +1,5 @@
 import { NotificationPlacement, message, notification } from "ant-design-vue";
-import { DocNodeData, Topics } from "@/types";
+import { DocNodeData, NodeType, Topics } from "@/types";
 // 定义 节点高亮 装饰器
 export default function HightlightDecorators() {
     return function enhancer(_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
@@ -19,10 +19,12 @@ export default function HightlightDecorators() {
 
                 // 执行原始方法
                 const playload = await originalMethod.apply(this, args);
-                if (!playload) {
-                    PubSub.publish(Topics.HIGHT_LIGHT_NODES, { ids: that.id, ms: 3000, type: "error" });
-                }
                 notification.close(that.id)
+                if (!playload&&that.type!=NodeType.TYPE_OUTPUT) {
+                    PubSub.publish(Topics.HIGHT_LIGHT_NODES, { ids: that.id, ms: 3000, type: "error" });
+                    message.error("高亮节点运行失败")
+                    return
+                }
                 message.success("节点运行成功！")
                 // 取消高亮节点
                 PubSub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: that.id, type: "run" });
@@ -30,6 +32,7 @@ export default function HightlightDecorators() {
             } catch (error) {
                 PubSub.publish(Topics.DEHIGHT_LIGHT_NODES, { id: that.id, type: "run" });
                 message.error("执行出错");
+                notification.close(that.id)
                 console.log(error);
             }
 

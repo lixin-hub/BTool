@@ -1,61 +1,65 @@
-import { createDirectedGraph, findCycle, hasSingleNode } from '@/util/util'
+import { clearCaches, createDirectedGraph, findCycle, hasSingleNode } from '@/util/util'
 import pubsub from 'pubsub-js'
-import { NodeType, StreamType, Topics } from '@/types';
+import { NodeType, Topics } from '@/types';
 import useCommonStore from '@/store/common';
 import { NotificationPlacement, message } from 'ant-design-vue';
 import { notification } from 'ant-design-vue';
 import { MyWaveSurfer } from '@/types/MyWaveSurfer';
 const store = useCommonStore()
 //从头执行
-export async function execFromRoot(endId?: string) {
-    MyWaveSurfer.alowLoading = false
-    //校验
-    if (!validation()) {
-        return
-    }
-    //排序
-    let sortedNode = createDirectedGraph(store.nodeList, store.lineList)
-    if (sortedNode.length == 0) return
-    notification.info({
-        message: `正在执行`,
-        description: "将会从根节点开始执行",
-        duration: 2,
-        placement: 'bootomRight' as NotificationPlacement
-    });
-    store.sortedNodeList = sortedNode
-    let playload: any = null;
-    for (let i = 0; i < sortedNode.length; i++) {
-        let node = sortedNode[i]
-        if (node.exec) {
-            try {
-                playload = await node.exec()
-                if (!playload&&(node.type!=NodeType.TYPE_OUTPUT)) {
+export async function execFromRoot(endId?: string): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+        //校验
+        if (!validation()) {
+            return
+        }
+        // await clearCaches(store.nodeList)
+        //排序
+        let sortedNode = createDirectedGraph(store.nodeList, store.lineList)
+        if (sortedNode.length == 0) return
+        notification.info({
+            message: `正在执行`,
+            description: "将会从根节点开始执行",
+            duration: 2,
+            placement: 'bootomRight' as NotificationPlacement
+        });
+        store.sortedNodeList = sortedNode
+        let playload: any = null;
+        for (let i = 0; i < sortedNode.length; i++) {
+            let node = sortedNode[i]
+            if (node.exec) {
+                try {
+                    MyWaveSurfer.alowLoading = false
+                    playload = await node.exec()
+                    if (!playload && (node.type != NodeType.TYPE_OUTPUT)) {
+                        notification.error({
+                            message: `执行节点：${node.id} 时发生错误`,
+                            description: "请检查数据输入或刷新重试！",
+                            duration: 4,
+                            placement: 'bootomRight' as NotificationPlacement
+                        });
+                        return
+                    }
+                } catch (err) {
                     notification.error({
                         message: `执行节点：${node.id} 时发生错误`,
                         description: "请检查数据输入或刷新重试！",
                         duration: 4,
                         placement: 'bootomRight' as NotificationPlacement
                     });
-                    MyWaveSurfer.alowLoading = true                    
-                    return
+                    console.log(err);
+                    reject()
+                    throw err
                 }
-            } catch {
-                notification.error({
-                    message: `执行节点：${node.id} 时发生错误`,
-                    description: "请检查数据输入或刷新重试！",
-                    duration: 4,
-                    placement: 'bootomRight' as NotificationPlacement
-                });
-                MyWaveSurfer.alowLoading = true
-                return
+            }
+            if (node.id === endId) {
+                break
             }
         }
-        if (node.id === endId) {
-            break
-        }
-    }
-    MyWaveSurfer.alowLoading = true
-    pubsub.publish(Topics.EXEC_FLOW, sortedNode)
+        resolve()
+        pubsub.publish(Topics.EXEC_FLOW, sortedNode)
+    })
+
 }
 
 function validation() {

@@ -5,6 +5,7 @@ import { DocNodeClass } from "../DocNodeClass";
 import { execFromRoot } from "@/util/ExecUtil";
 
 export class ProcessNode extends DocNodeClass {
+    declare playload?: AudioBuffer|AudioBuffer[]
     constructor(data: NodeOptions) {
         super(data);
         //合并选项与自定义选项

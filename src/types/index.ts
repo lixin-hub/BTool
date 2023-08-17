@@ -38,7 +38,12 @@ export enum NodeKey {
     KEY_OUT_PUT_FLAC = "flac",
     KEY_OUT_PUT_OPUS = "opus",
     KEY_OUT_PUT_WMA = "wma",
-    KEY_PROCESS_MERGE = "merge"
+    KEY_PROCESS_MERGE = "merge",
+    //     label: string,
+    //     tips: string,
+    //     fn: () => void
+    // }
+    KEY_PROCESS_EASE_IN_OUT = "ease-in|ease-out"
 }
 // export interface ContextMenuItem{
 //     label: string,

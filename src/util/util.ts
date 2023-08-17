@@ -19,6 +19,8 @@ import { OPUSNode } from "@/functions/output/impl/OPUSNode";
 import { WMANode } from "@/functions/output/impl/WMANode";
 import { M4ANode } from "@/functions/output/impl/M4ANode";
 import { MerageAudioNode as MergeAudioNode } from "@/functions/process/impl/MergeAudioNode";
+import { EaseInOutNode } from "@/functions/process/impl/EasyInOutNode";
+import WaveSurferCache from "./WaveSurferCache";
 function uuid(len: number, radix: number): string {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
     var uuid = [], i;
@@ -279,8 +281,12 @@ export function createNodeInstanceByKey(key: string, options: NodeOptions): DocN
     }
     if (key === NodeKey.KEY_PROCESS_CUT) {
         return new CutAudioNode(options);
-    } if (key === NodeKey.KEY_PROCESS_MERGE) {
+    }
+    if (key === NodeKey.KEY_PROCESS_MERGE) {
         return new MergeAudioNode(options);
+    }
+    if (key === NodeKey.KEY_PROCESS_EASE_IN_OUT) {
+        return new EaseInOutNode(options);
     }
     if (key === NodeKey.KEY_OUT_PUT_WAV) {
         return new WavNode(options);
@@ -336,5 +342,20 @@ export function getPreNodeData<T>(nodeList: Array<DocNodeData>, preNodeId?: stri
     let preNode = findDocNodeById(nodeList, preNodeId)
     let buffer = preNode?.outputPlayload
     return buffer as T
+
+}
+//清除节点缓存
+export function clearCaches(nodeList: DocNodeData[]): Promise<void> {
+    return new Promise((reslove) => {
+        nodeList.forEach(node => {
+            if (node.type != NodeType.TYPE_INPUT) {
+                delete node.playload
+                delete node.inputPlayload
+                delete node.outputPlayload
+                WaveSurferCache.remove(node.id)
+            }
+        });
+        reslove()
+    })
 
 }

@@ -1,10 +1,13 @@
 <template>
     <div class="top-tool-bar">
-        <a-tooltip title="清空画布">
-            <a-button @click="clearAllNodes" :icon="h(DeleteOutlined)">清空</a-button>
+        <a-tooltip title="清空画布所有节点">
+            <a-button @click="clearAllNodes" :icon="h(DeleteOutlined)">清空节点</a-button>
         </a-tooltip>
-        <a-tooltip title="执行流程">
-            <a-button @click="execFlow" :icon="h(DeleteOutlined)">执行</a-button>
+        <a-tooltip title="执行所有节点到输出">
+            <a-button @click="execFlow" :icon="h(DeleteOutlined)">全部执行</a-button>
+        </a-tooltip>
+        <a-tooltip title="清除已加载的缓存">
+            <a-button @click="clearCache" :icon="h(DeleteOutlined)">清除缓存</a-button>
         </a-tooltip>
 
     </div>
@@ -20,13 +23,26 @@ import { h } from 'vue';
 import pubsub from 'pubsub-js'
 import { DeleteOutlined } from '@ant-design/icons-vue';
 import { Topics } from '@/types';
-import {  execFromRoot } from '@/util/ExecUtil';
+import { execFromRoot } from '@/util/ExecUtil';
+import { clearCaches } from '@/util/util'
+import { MyWaveSurfer } from '@/types/MyWaveSurfer';
+import useCommonStore from '@/store/common'
+import { message } from 'ant-design-vue';
+const store = useCommonStore()
 //清空画布
 function clearAllNodes() {
     pubsub.publish(Topics.CLEAR_ALL_NODES)
 }
-function execFlow(){
-    execFromRoot()
+async function execFlow() {
+    MyWaveSurfer.alowLoading = false
+    await execFromRoot()
+    MyWaveSurfer.alowLoading = true
+
+}
+async function clearCache() {
+    message.info("正在清除缓存")
+    await clearCaches(store.nodeList)
+    message.info("清除完成")
 }
 </script>
   

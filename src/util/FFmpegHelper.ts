@@ -89,7 +89,54 @@ export class FFmpegHelper {
         });
     }
 
-    static async mergeAudio(buffer1: AudioBuffer, buffer2: AudioBuffer, offset1: number, offset2: number) {
+    // static async mergeAudio(buffer1: AudioBuffer, buffer2: AudioBuffer, offset1: number, offset2: number) {
+    //     return new Promise(async function (resolove, reject) {
+    //         const modal = Modal.info({
+    //             title: '运行日志',
+    //             content: "正在运行",
+    //             footer: false
+    //         });
+    //         const ffmpeg = await FFmpegHelper.getInstance().getFFmpeg()
+    //         ffmpeg.on('log', (e: LogEvent) => {
+    //             modal.update({
+    //                 content: e.message + '--------PROGRESS---------' + Number(progress * 100).toFixed(2) + "%",
+    //             });
+    //         })
+    //         let progress = 0
+    //         ffmpeg.on("progress", (p) => {
+    //             progress = p.progress
+    //             if (progress >= 1) {
+    //                 modal.destroy()
+    //             }
+    //         })
+    //         try {
+    //             let arrayBuffer1 = await convertAudioBufferToWavBuffer(buffer1)
+    //             let arrayBuffer2 = await convertAudioBufferToWavBuffer(buffer2)
+    //             await ffmpeg.writeFile("input1.wav", new Uint8Array(arrayBuffer1))
+    //             await ffmpeg.writeFile("input2.wav", new Uint8Array(arrayBuffer2))
+
+    //             const args = [
+    //                 '-i', "input1.wav",
+    //                 '-i', "input2.wav",
+    //                 '-filter_complex',
+    //                 `[0:a]atrim=start=${offset1 / 1000},asetpts=PTS-STARTPTS[a1];[1:a]atrim=start=${offset2 / 1000},asetpts=PTS-STARTPTS[a2];[a1][a2]amix=inputs=2:duration=first:dropout_transition=2[a]`,
+    //                 '-map', '[a]',
+    //                 '-c:a', 'pcm_s16le',
+    //                 'output.wav'
+    //             ];
+    //             await ffmpeg.exec(args)
+    //             const data = await ffmpeg.readFile("output.wav")
+    //             modal.destroy()
+    //             resolove(data)
+    //         } catch (error) {
+    //             console.log(error);
+    //             modal.destroy()
+    //             reject(error)
+    //         }
+
+    //     });
+    // }
+    static async easeInOut(audioBuffer: AudioBuffer, easeInTime: number, easeOutTime: number): Promise<FileData> {
         return new Promise(async function (resolove, reject) {
             const modal = Modal.info({
                 title: '运行日志',
@@ -101,6 +148,7 @@ export class FFmpegHelper {
                 modal.update({
                     content: e.message + '--------PROGRESS---------' + Number(progress * 100).toFixed(2) + "%",
                 });
+
             })
             let progress = 0
             ffmpeg.on("progress", (p) => {
@@ -109,31 +157,26 @@ export class FFmpegHelper {
                     modal.destroy()
                 }
             })
+
             try {
-                let arrayBuffer1 = await convertAudioBufferToWavBuffer(buffer1)
-                let arrayBuffer2 = await convertAudioBufferToWavBuffer(buffer2)
-                await ffmpeg.writeFile("input1.wav", new Uint8Array(arrayBuffer1))
-                await ffmpeg.writeFile("input2.wav", new Uint8Array(arrayBuffer2))
+                let arrayBuffer = await convertAudioBufferToWavBuffer(audioBuffer)
+                await ffmpeg.writeFile("input.wav", new Uint8Array(arrayBuffer))
 
                 const args = [
-                    '-i', "input1.wav",
-                    '-i', "input2.wav",
-                    '-filter_complex',
-                    `[0:a]atrim=start=${offset1 / 1000},asetpts=PTS-STARTPTS[a1];[1:a]atrim=start=${offset2 / 1000},asetpts=PTS-STARTPTS[a2];[a1][a2]amix=inputs=2:duration=first:dropout_transition=2[a]`,
-                    '-map', '[a]',
-                    '-c:a', 'pcm_s16le',
-                    'output.wav'
+                    '-i', 'input.wav',
+                    '-af', `afade=t=in:ss=0:d=${easeInTime},afade=t=out:st=${audioBuffer.duration - easeOutTime}:d=${easeOutTime}`,
+                    'output.wav',
                 ];
                 await ffmpeg.exec(args)
                 const data = await ffmpeg.readFile("output.wav")
                 modal.destroy()
                 resolove(data)
             } catch (error) {
-                console.log(error);
+                console.log("helper:", error);
                 modal.destroy()
                 reject(error)
+                throw error
             }
-
         });
     }
 

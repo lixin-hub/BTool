@@ -8,7 +8,7 @@ export default {
     directive: (arg0: string, arg1: { mounted(el: any,binding:any): void }) => void;
   }) => {
     app.directive("drag", {
-      mounted(el:any,binding) {
+      mounted(el:any,_binding) {
     
         
         // 获取可移动元素的父节点
