@@ -1,4 +1,4 @@
-import { clearCaches, createDirectedGraph, findCycle, hasSingleNode } from '@/util/util'
+import {  createDirectedGraph, findCycle, hasSingleNode } from '@/util/util'
 import pubsub from 'pubsub-js'
 import { NodeType, Topics } from '@/types';
 import useCommonStore from '@/store/common';

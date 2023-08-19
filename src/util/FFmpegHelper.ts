@@ -3,6 +3,7 @@ import { FileData, LogEvent } from "@ffmpeg/ffmpeg/dist/esm/types";
 import { toBlobURL } from "@ffmpeg/util";
 import { Modal } from "ant-design-vue";
 import { convertAudioBufferToWavBuffer } from "./AudioUtil";
+import { getWasmCoreWasm } from '@/util/FetchUtil'
 export class FFmpegHelper {
 
     private static helperInstance: FFmpegHelper
@@ -14,19 +15,23 @@ export class FFmpegHelper {
         if (!FFmpegHelper.helperInstance) {
             FFmpegHelper.helperInstance = new FFmpegHelper()
         }
+
         return FFmpegHelper.helperInstance
     }
     async getFFmpeg(): Promise<FFmpeg> {
         return new Promise(async (resolove, reject) => {
             if (!this.ffmpegInstance) {
                 this.ffmpegInstance = new FFmpeg()
-                const baseURL = 'http://localhost:5173'
-                // const wasmurl='https://unpkg.com/@ffmpeg/core-mt@0.12.2/dist/esm/ffmpeg-core.wasm'
+                // const baseURL = 'http://localhost:5173'
+                // const baseURL = 'http://42.193.22.5/ffmpeg'
+                const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.2/dist/esm'
                 try {
+                    const blob = await getWasmCoreWasm()
                     await this.ffmpegInstance.load({
-                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'application/javascript'),
+                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                        // wasmURL: await toBlobURL(URL.createObjectURL(blob), 'application/wasm'),
                         wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'applicaiton/wasm'),
-                        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'application/javascript'),
+                        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
                     })
                     resolove(this.ffmpegInstance)
                 } catch (error) {

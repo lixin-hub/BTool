@@ -35,11 +35,13 @@
     </div>
 </template>
 <script lang="ts" setup>
+
 import { Documention } from '@/components/Document'
 // import { Header } from '@/components/Header'
 import { onMounted, onUnmounted } from 'vue';
 import pubsub from "pubsub-js";
 import { ShortCut } from "@/types";
+import { getWasmCoreWasm } from '@/util/FetchUtil';
 function handleKeyDown(event: KeyboardEvent) {
     if (event.ctrlKey && event.code === 'KeyD') {
         pubsub.publish(ShortCut.KEY_CTRL_D)
@@ -64,14 +66,14 @@ function handleKeyDown(event: KeyboardEvent) {
 
 
 }
-onMounted(() => {
+onMounted(async () => {
     window.addEventListener('keydown', handleKeyDown)
+    await getWasmCoreWasm()
 })
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown)
 })
 </script>
-
 <style lang="scss" scoped>
 .container {
     background-color: white;

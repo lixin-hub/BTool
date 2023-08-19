@@ -2,7 +2,6 @@ import { NodeOptions, } from "@/types";
 import { ProcessNode } from "../ProcessNode";
 import { HightlightDecorators } from "@/decorators";
 import useCommonStore from '@/store/common';
-import WaveSurferCache from "@/util/WaveSurferCache";
 import options from '@/util/WaveSurferOptions'
 import { watch } from "vue";
 import { storeToRefs } from "pinia";
@@ -42,6 +41,7 @@ export class MerageAudioNode extends ProcessNode {
     }
     activated(): void {
         this.doubleClick()
+        this.showWave()
     }
     deActivated(): void {
         this.hideAllWave()
@@ -88,6 +88,7 @@ export class MerageAudioNode extends ProcessNode {
             // let blob=new Blob([(data as Uint8Array).buffer], { type: 'audio/wav' })
             // let audioBuffer= await fileToAudioBuffer(blob as File)
             let audioBuffer = await this.mergeAudioBuffers(loadedBuffer[0], loadedBuffer[1], o1, o2)
+            console.log(audioBuffer);
             let ws = this.getWs()            
             await ws.loadBuffer(audioBuffer)
             this.showWave()
