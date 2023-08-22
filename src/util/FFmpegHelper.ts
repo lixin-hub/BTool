@@ -23,14 +23,14 @@ export class FFmpegHelper {
             if (!this.ffmpegInstance) {
                 this.ffmpegInstance = new FFmpeg()
                 // const baseURL = 'http://localhost:5173'
-                // const baseURL = 'http://42.193.22.5/ffmpeg'
-                const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.2/dist/esm'
+                const baseURL = 'https://42.193.22.5/ffmpeg'
+                // const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.2/dist/esm'
                 try {
                     const blob = await getWasmCoreWasm()
                     await this.ffmpegInstance.load({
                         coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                        // wasmURL: await toBlobURL(URL.createObjectURL(blob), 'application/wasm'),
-                        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'applicaiton/wasm'),
+                        wasmURL: await toBlobURL(URL.createObjectURL(blob), 'application/wasm'),
+                        // wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'applicaiton/wasm'),
                         workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
                     })
                     resolove(this.ffmpegInstance)

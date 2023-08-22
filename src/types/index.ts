@@ -122,16 +122,19 @@ export type DocNodeData = BaseNode & {
     destory():void,//销
 } & NodeOptions
 
+
 export enum Topics {
-    NODE_ADD = "node_add",
-    NODE_DELETE = "node_delete",
-    NODE_UPDATE = "node_update",
-    NODE_SELECT = "node_select",
-    CLEAR_ALL_NODES = "clear_all_nodes",
-    EXEC_FLOW = "exec_flow",
-    HIGHT_LIGHT_NODES = "hight_light_nodes",
-    DEHIGHT_LIGHT_NODES = "DEHIGHT_LIGHT_NODES",
-    FILE_SLECTED = "FILE_SLECTED"
+NODE_ADD = "node_add",
+NODE_DELETE = "node_delete",
+NODE_UPDATE = "node_update",
+NODE_SELECT = "node_select",
+CLEAR_ALL_NODES = "clear_all_nodes",
+EXEC_FLOW = "exec_flow",
+HIGHT_LIGHT_NODES = "hight_light_nodes",
+DEHIGHT_LIGHT_NODES = "DEHIGHT_LIGHT_NODES",
+FILE_SLECTED = "FILE_SLECTED",
+ILE_SLECTED = "FILE_SLECTED",
+LOAD_EXAMPLE = "LOAD_EXAMPLE"
 }
 //快捷键
 export enum ShortCut {

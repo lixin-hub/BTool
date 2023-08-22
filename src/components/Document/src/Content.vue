@@ -169,7 +169,7 @@ function init() {
                 if (target?.key === NodeKey.KEY_PROCESS_MERGE) {
                     //合并节点加上label
                     let inNum = target.pre?.length || 0
-                    line.label = "输入" + (inNum+1)
+                    line.label = "输入" + (inNum + 1)
                     evt.connection.addOverlay(["Label", {
                         label: line.label,
                         location: 0.5,
@@ -516,6 +516,9 @@ let unsubscribeHeight = pubsub.subscribe(Topics.HIGHT_LIGHT_NODES, (_, { ids, ms
 //取消高亮
 let unsubscribeDeHeight = pubsub.subscribe(Topics.DEHIGHT_LIGHT_NODES, (_, { id, type }) => {
     deHightLihtNode(id, type)
+})//加载列子
+let unsubscribExample = pubsub.subscribe(Topics.LOAD_EXAMPLE, () => {
+    location.reload()
 })
 
 onUnmounted(function () {
@@ -527,6 +530,7 @@ onUnmounted(function () {
     pubsub.unsubscribe(unsubscribeAddNode)
     pubsub.unsubscribe(unsubscribeHeight)
     pubsub.unsubscribe(unsubscribeDeHeight)
+    pubsub.unsubscribe(unsubscribExample)
     mouseTracker.destroy()
 })
 </script>
@@ -537,7 +541,8 @@ onUnmounted(function () {
     // background-color: antiquewhite;
     position: relative;
 }
-.label-overlay{
+
+.label-overlay {
     color: rgb(253, 253, 253);
     font-size: 12px;
 }

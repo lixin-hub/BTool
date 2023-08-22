@@ -9,6 +9,9 @@
         <a-tooltip title="清除已加载的缓存">
             <a-button @click="clearCache" :icon="h(DeleteOutlined)">清除缓存</a-button>
         </a-tooltip>
+        <a-tooltip title="例子">
+            <a-button @click="example" :icon="h(DeleteOutlined)">一个用法举例</a-button>
+        </a-tooltip>
 
     </div>
     <div class="content">
@@ -28,6 +31,8 @@ import { clearCaches } from '@/util/util'
 import { MyWaveSurfer } from '@/types/MyWaveSurfer';
 import useCommonStore from '@/store/common'
 import { message } from 'ant-design-vue';
+import { exampleLineList, exampleNodeList } from "@/util/example";
+
 const store = useCommonStore()
 //清空画布
 function clearAllNodes() {
@@ -43,6 +48,14 @@ async function clearCache() {
     message.info("正在清除缓存")
     await clearCaches(store.nodeList)
     message.info("清除完成")
+}
+function example() {
+    console.log();
+
+    localStorage.setItem("nodeList", JSON.stringify(exampleNodeList))
+    localStorage.setItem("lineList", JSON.stringify(exampleLineList))
+    PubSub.publish(Topics.LOAD_EXAMPLE)
+
 }
 </script>
   
