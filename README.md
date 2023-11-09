@@ -1,7 +1,14 @@
-# Vue 3 + Vite
-
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+# 在线音频处理工具
+## 界面
+![图片](https://github.com/lixin-hub/BTool/assets/52574007/9121db87-9a95-4fce-b686-c2987c1be5cb)
+## 特点：
+1. 使用wasm技术在浏览器实现音频处理，无需上传文件至后台服务器
+2. 使用ffmpeg作为音视频处理库，此库功能强大，本次学习仅用了音频处理方面的功能
+3. 使用Jsplumb流程节点引擎，拖拽组合使用简单
+4. 使用WaveSufer音频可视化，可实现实时预览
+## 功能
+目前仅支持：各种音频格式互相转换（基本都能转），合并，淡入淡出，裁剪
+其他扩展功能因比较考验服务器算力遂弃
+## 运行
+vite+Vue3+ts
+学习用项目，兼容性较差，内存占用较高，以及存在一些浏览器安全问题，目前火狐体验稍好
